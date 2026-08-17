@@ -16,6 +16,9 @@ export default defineConfig({
 ],
             refresh: true,
             fonts: [
+                bunny('Tajawal', {
+                    weights: [400, 500, 700, 800],
+                }),
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
@@ -24,6 +27,11 @@ export default defineConfig({
         tailwindcss(),
         react(),
     ],
+    css: {
+        lightningcss: {
+            errorRecovery: true,
+        },
+    },
     server: {
         watch: {
             ignored: ['**/storage/framework/views/**'],
