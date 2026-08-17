@@ -47,3 +47,26 @@ it('forbids another user from deleting a post they do not own', function () {
     $response->assertForbidden();
     $this->assertDatabaseHas('posts', ['id' => $post->id]);
 });
+
+it('rate limits post update/delete to 10 per minute per user, sharing one bucket', function () {
+    $owner = User::factory()->create();
+    $post = Post::factory()->create(['user_id' => $owner->id]);
+
+    // Update only content (not title) so the slug — and therefore the URL — stays stable.
+    for ($i = 0; $i < 10; $i++) {
+        $this->actingAs($owner, 'sanctum')
+            ->putJson("/api/v1/posts/{$post->slug}", ['content' => "Updated content {$i}"])
+            ->assertOk();
+    }
+
+    $this->actingAs($owner, 'sanctum')
+        ->putJson("/api/v1/posts/{$post->slug}", ['content' => 'One too many'])
+        ->assertStatus(429);
+
+    // Delete shares the same "post-mutations" bucket, so it's throttled too.
+    $this->actingAs($owner, 'sanctum')
+        ->deleteJson("/api/v1/posts/{$post->slug}")
+        ->assertStatus(429);
+
+    $this->assertDatabaseHas('posts', ['id' => $post->id]);
+});
