@@ -51,3 +51,11 @@ it('rate limits tag creation to 10 per minute per user', function () {
 
     $this->assertDatabaseCount('tags', 10);
 });
+
+it('rate limits the tags index to 30 per minute per IP', function () {
+    for ($i = 0; $i < 30; $i++) {
+        $this->getJson('/api/v1/tags')->assertOk();
+    }
+
+    $this->getJson('/api/v1/tags')->assertStatus(429);
+});
