@@ -20,7 +20,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/user', [AuthController::class, 'user']);
 
-        Route::post('/posts', [PostController::class, 'store']);
+        Route::post('/posts', [PostController::class, 'store'])
+            ->middleware('throttle:posts');
         Route::put('/posts/{post:slug}', [PostController::class, 'update']);
         Route::patch('/posts/{post:slug}', [PostController::class, 'update']);
         Route::delete('/posts/{post:slug}', [PostController::class, 'destroy']);

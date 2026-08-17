@@ -187,7 +187,7 @@ endpoints return Laravel's standard `{"data": [...], "links": {...}, "meta": {..
 |---|---|---|---|
 | GET | `/posts` | — | Paginated list. Query params: `search` (title/content/tag name), `tag` (slug), `sort` (`latest`\|`oldest`\|`title`), `page`, `per_page`. |
 | GET | `/posts/{slug}` | — | Single post with author, tags, and comments. |
-| POST | `/posts` | ✓ | Create. Body (multipart for image): `title`, `content`, `image` (optional file), `published_at` (optional), `tags` (optional array of names). Returns `201`. |
+| POST | `/posts` | ✓ | Create. Body (multipart for image): `title`, `content`, `image` (optional file), `published_at` (optional), `tags` (optional array of names). Returns `201`. Rate limited to 5 requests/minute per user — returns `429` past that. |
 | PUT/PATCH | `/posts/{slug}` | ✓ (owner) | Update. Same fields, all optional. `403` if not the owner. |
 | DELETE | `/posts/{slug}` | ✓ (owner) | Delete. `403` if not the owner. |
 
