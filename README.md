@@ -1,5 +1,8 @@
 # منصة المعرفة السعودية — Saudi Knowledge Platform
 
+[![Tests](https://github.com/SadeenAlharbi/blog/actions/workflows/tests.yml/badge.svg)](https://github.com/SadeenAlharbi/blog/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A full-stack Laravel + React knowledge platform for structured content about Saudi Arabia — history,
 Vision 2030, national projects, the economy, technology and AI, culture, heritage, tourism, and society.
 Built as a portfolio-grade demonstration of Laravel architecture, REST API design, authentication and
