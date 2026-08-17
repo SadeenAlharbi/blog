@@ -4,6 +4,40 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Tajawal', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+        'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* Saudi green — used moderately as the brand/action color, never as a page-wide wash */
+    --color-brand-50: oklch(97% 0.02 152);
+    --color-brand-100: oklch(93% 0.045 152);
+    --color-brand-200: oklch(86% 0.08 152);
+    --color-brand-300: oklch(76% 0.11 152);
+    --color-brand-400: oklch(64% 0.13 152);
+    --color-brand-500: oklch(48% 0.12 152);
+    --color-brand-600: oklch(38% 0.1 152);
+    --color-brand-700: oklch(30% 0.085 152);
+    --color-brand-800: oklch(23% 0.065 152);
+    --color-brand-900: oklch(17% 0.045 152);
+
+    /* Warm sand/heritage accent — used sparingly for highlights, badges, hero accents */
+    --color-sand-50: oklch(97.5% 0.02 75);
+    --color-sand-100: oklch(94% 0.045 75);
+    --color-sand-200: oklch(88% 0.075 72);
+    --color-sand-300: oklch(80% 0.1 68);
+    --color-sand-400: oklch(71% 0.11 62);
+    --color-sand-500: oklch(62% 0.11 55);
+    --color-sand-600: oklch(52% 0.1 48);
+
+    /* Warm ink neutrals for text/backgrounds instead of pure gray */
+    --color-ink-25: oklch(99% 0.003 90);
+    --color-ink-50: oklch(97.5% 0.004 90);
+    --color-ink-100: oklch(94% 0.006 90);
+    --color-ink-200: oklch(88% 0.008 90);
+    --color-ink-300: oklch(78% 0.01 90);
+    --color-ink-400: oklch(62% 0.012 90);
+    --color-ink-500: oklch(48% 0.012 90);
+    --color-ink-600: oklch(38% 0.012 90);
+    --color-ink-700: oklch(29% 0.012 90);
+    --color-ink-800: oklch(21% 0.01 90);
+    --color-ink-900: oklch(15% 0.008 90);
 }
