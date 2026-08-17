@@ -59,6 +59,25 @@ it('rejects login with invalid credentials', function () {
     $response->assertStatus(422)->assertJsonValidationErrors('email');
 });
 
+it('rate limits login attempts to 5 per minute per email+IP', function () {
+    User::factory()->create([
+        'email' => 'bruteforce@example.com',
+        'password' => Hash::make('password123'),
+    ]);
+
+    for ($i = 0; $i < 5; $i++) {
+        $this->postJson('/api/v1/login', [
+            'email' => 'bruteforce@example.com',
+            'password' => 'wrong-password',
+        ])->assertStatus(422);
+    }
+
+    $this->postJson('/api/v1/login', [
+        'email' => 'bruteforce@example.com',
+        'password' => 'password123',
+    ])->assertStatus(429);
+});
+
 it('returns the authenticated user profile', function () {
     $user = User::factory()->create();
 
