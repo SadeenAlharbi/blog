@@ -25,7 +25,8 @@ Route::prefix('v1')->group(function () {
         Route::patch('/posts/{post:slug}', [PostController::class, 'update']);
         Route::delete('/posts/{post:slug}', [PostController::class, 'destroy']);
 
-        Route::post('/posts/{post:slug}/comments', [CommentController::class, 'store']);
+        Route::post('/posts/{post:slug}/comments', [CommentController::class, 'store'])
+            ->middleware('throttle:comments');
 
         Route::post('/tags', [TagController::class, 'store']);
     });

@@ -202,7 +202,7 @@ curl "http://localhost:8000/api/v1/posts?search=vision&tag=technology&page=1"
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
 | GET | `/posts/{slug}/comments` | — | Paginated comments for a post. |
-| POST | `/posts/{slug}/comments` | ✓ | Body: `content`. Queues an email notification to the post owner (skipped if commenting on your own post). |
+| POST | `/posts/{slug}/comments` | ✓ | Body: `content`. Queues an email notification to the post owner (skipped if commenting on your own post). Rate limited to 10 requests/minute per user — returns `429` past that. |
 
 ### Tags
 
@@ -214,7 +214,7 @@ curl "http://localhost:8000/api/v1/posts?search=vision&tag=technology&page=1"
 ### Status Codes
 
 `200` OK · `201` Created · `401` Unauthenticated · `403` Forbidden (not the resource owner) · `404` Not
-found · `422` Validation error.
+found · `422` Validation error · `429` Too many requests (rate limited).
 
 ## Frontend
 
