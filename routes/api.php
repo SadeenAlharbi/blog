@@ -12,8 +12,11 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:login');
 
-    Route::get('/posts', [PostController::class, 'index']);
-    Route::get('/posts/{post:slug}', [PostController::class, 'show']);
+    Route::middleware('throttle:posts-read')->group(function () {
+        Route::get('/posts', [PostController::class, 'index']);
+        Route::get('/posts/{post:slug}', [PostController::class, 'show']);
+    });
+
     Route::get('/posts/{post:slug}/comments', [CommentController::class, 'index']);
 
     Route::get('/tags', [TagController::class, 'index'])

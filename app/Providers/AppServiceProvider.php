@@ -61,5 +61,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('tags-index', function (Request $request) {
             return Limit::perMinute(30)->by($request->ip());
         });
+
+        RateLimiter::for('posts-read', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip());
+        });
     }
 }
