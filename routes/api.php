@@ -24,9 +24,12 @@ Route::prefix('v1')->group(function () {
 
         Route::post('/posts', [PostController::class, 'store'])
             ->middleware('throttle:posts');
-        Route::put('/posts/{post:slug}', [PostController::class, 'update']);
-        Route::patch('/posts/{post:slug}', [PostController::class, 'update']);
-        Route::delete('/posts/{post:slug}', [PostController::class, 'destroy']);
+
+        Route::middleware('throttle:post-mutations')->group(function () {
+            Route::put('/posts/{post:slug}', [PostController::class, 'update']);
+            Route::patch('/posts/{post:slug}', [PostController::class, 'update']);
+            Route::delete('/posts/{post:slug}', [PostController::class, 'destroy']);
+        });
 
         Route::post('/posts/{post:slug}/comments', [CommentController::class, 'store'])
             ->middleware('throttle:comments');
