@@ -40,8 +40,8 @@ authorization, testing, and a Blade + React frontend — not a typical blog scaf
   island (Platforms Code UI components) for interactive search/filter on the posts listing.
 - **Arabic-first, RTL, Saudi-modern design** — a moderate green brand palette (not an all-green theme),
   warm neutrals, and Tajawal typography.
-- **Pest test suite** (35 tests / 91 assertions) covering auth, CRUD, authorization, comments, search, and
-  the web frontend.
+- **Pest test suite** (49 tests / 292 assertions) covering auth, CRUD, authorization, comments, search, rate
+  limiting, and the web frontend.
 - **Factories + seeder** generating realistic Saudi-themed demo content (Vision 2030, NEOM, AI, tourism,
   heritage, etc.).
 
@@ -156,10 +156,10 @@ delivered — convenient for local verification.
 php artisan test
 ```
 
-35 tests / 91 assertions covering registration/login/logout, post CRUD + validation, owner-only
+49 tests / 292 assertions covering registration/login/logout, post CRUD + validation, owner-only
 authorization (positive and negative cases), comments (including notification dispatch), search/tag
-filtering/pagination, and the Blade web frontend (home, posts, dashboard, guest redirects, web
-registration and post creation).
+filtering/pagination, rate limiting on every endpoint, and the Blade web frontend (home, posts,
+dashboard, guest redirects, web registration and post creation).
 
 ### Continuous Integration
 
