@@ -69,3 +69,20 @@ it('lists comments for a post', function () {
 
     $response->assertOk()->assertJsonCount(3, 'data');
 });
+
+it('rate limits comment creation to 10 per minute per user', function () {
+    $user = User::factory()->create();
+    $post = Post::factory()->create();
+
+    for ($i = 0; $i < 10; $i++) {
+        $this->actingAs($user, 'sanctum')
+            ->postJson("/api/v1/posts/{$post->slug}/comments", ['content' => "Comment {$i}"])
+            ->assertCreated();
+    }
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson("/api/v1/posts/{$post->slug}/comments", ['content' => 'One too many'])
+        ->assertStatus(429);
+
+    $this->assertDatabaseCount('comments', 10);
+});
