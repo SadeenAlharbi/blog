@@ -19,7 +19,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/tags', [TagController::class, 'index']);
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/logout', [AuthController::class, 'logout'])
+            ->middleware('throttle:logout');
         Route::get('/user', [AuthController::class, 'user']);
 
         Route::post('/posts', [PostController::class, 'store'])

@@ -120,3 +120,22 @@ it('logs out the authenticated user', function () {
     $response->assertOk();
     $this->assertDatabaseCount('personal_access_tokens', 0);
 });
+
+it('rate limits logout to 10 per minute per user', function () {
+    $user = User::factory()->create();
+
+    // Each logout deletes its own token, so a fresh token is needed per request.
+    for ($i = 0; $i < 10; $i++) {
+        $token = $user->createToken('api')->plainTextToken;
+
+        $this->withHeader('Authorization', "Bearer {$token}")
+            ->postJson('/api/v1/logout')
+            ->assertOk();
+    }
+
+    $token = $user->createToken('api')->plainTextToken;
+
+    $this->withHeader('Authorization', "Bearer {$token}")
+        ->postJson('/api/v1/logout')
+        ->assertStatus(429);
+});
