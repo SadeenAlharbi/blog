@@ -22,4 +22,17 @@ class UpdatePostRequest extends FormRequest
             'tags.*' => ['string', 'max:50'],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('tags_input') && ! $this->has('tags')) {
+            $this->merge([
+                'tags' => collect(explode(',', $this->string('tags_input')))
+                    ->map(fn ($tag) => trim($tag))
+                    ->filter()
+                    ->values()
+                    ->all(),
+            ]);
+        }
+    }
 }
