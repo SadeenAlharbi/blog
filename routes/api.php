@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])
+        ->middleware('throttle:login');
 
     Route::get('/posts', [PostController::class, 'index']);
     Route::get('/posts/{post:slug}', [PostController::class, 'show']);
