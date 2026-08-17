@@ -29,6 +29,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/posts/{post:slug}/comments', [CommentController::class, 'store'])
             ->middleware('throttle:comments');
 
-        Route::post('/tags', [TagController::class, 'store']);
+        Route::post('/tags', [TagController::class, 'store'])
+            ->middleware('throttle:tags');
     });
 });
