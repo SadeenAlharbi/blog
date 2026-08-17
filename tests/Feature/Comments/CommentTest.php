@@ -86,3 +86,13 @@ it('rate limits comment creation to 10 per minute per user', function () {
 
     $this->assertDatabaseCount('comments', 10);
 });
+
+it('rate limits the comments index to 30 per minute per IP', function () {
+    $post = Post::factory()->create();
+
+    for ($i = 0; $i < 30; $i++) {
+        $this->getJson("/api/v1/posts/{$post->slug}/comments")->assertOk();
+    }
+
+    $this->getJson("/api/v1/posts/{$post->slug}/comments")->assertStatus(429);
+});
