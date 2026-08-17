@@ -176,7 +176,7 @@ endpoints return Laravel's standard `{"data": [...], "links": {...}, "meta": {..
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| POST | `/register` | — | Register a user. Body: `name`, `email`, `password`, `password_confirmation`. Returns `201` with `user` + `token`. |
+| POST | `/register` | — | Register a user. Body: `name`, `email`, `password`, `password_confirmation`. Returns `201` with `user` + `token`. Rate limited to 5 requests/minute per IP — returns `429` past that. |
 | POST | `/login` | — | Body: `email`, `password`. Returns `200` with `user` + `token`, or `422` on invalid credentials. Rate limited to 5 requests/minute per email+IP combination — returns `429` past that. |
 | POST | `/logout` | ✓ | Revokes the current access token. |
 | GET | `/user` | ✓ | Returns the authenticated user's profile. |
