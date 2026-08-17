@@ -201,7 +201,7 @@ curl "http://localhost:8000/api/v1/posts?search=vision&tag=technology&page=1"
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| GET | `/posts/{slug}/comments` | — | Paginated comments for a post. |
+| GET | `/posts/{slug}/comments` | — | Paginated comments for a post. Rate limited to 30 requests/minute per IP — returns `429` past that. |
 | POST | `/posts/{slug}/comments` | ✓ | Body: `content`. Queues an email notification to the post owner (skipped if commenting on your own post). Rate limited to 10 requests/minute per user — returns `429` past that. |
 
 ### Tags
