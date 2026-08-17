@@ -41,3 +41,15 @@
     --color-ink-800: oklch(21% 0.01 90);
     --color-ink-900: oklch(15% 0.008 90);
 }
+
+/*
+ * platformscode-new-react bundles @platformscode/core's core.css, which sets a
+ * global, unscoped `html { font-size: 62.5%/75% }` (a 10px-base rem convention
+ * for its own components). That silently shrinks every rem-based Tailwind
+ * utility across our entire UI (spacing, sizing, max-w-*, text sizes) to ~62%
+ * of intended size, since Tailwind v4's scale is rem-based throughout. We
+ * don't control that package's CSS, so force the standard 16px root back here.
+ */
+html {
+    font-size: 100% !important;
+}
