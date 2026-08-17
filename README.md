@@ -185,8 +185,8 @@ endpoints return Laravel's standard `{"data": [...], "links": {...}, "meta": {..
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| GET | `/posts` | — | Paginated list. Query params: `search` (title/content/tag name), `tag` (slug), `sort` (`latest`\|`oldest`\|`title`), `page`, `per_page`. |
-| GET | `/posts/{slug}` | — | Single post with author, tags, and comments. |
+| GET | `/posts` | — | Paginated list. Query params: `search` (title/content/tag name), `tag` (slug), `sort` (`latest`\|`oldest`\|`title`), `page`, `per_page`. Shares a 60 requests/minute per-IP rate limit with the single-post endpoint below — returns `429` past that. |
+| GET | `/posts/{slug}` | — | Single post with author, tags, and comments. Shares the same 60 requests/minute per-IP rate limit as the list endpoint — returns `429` past that. |
 | POST | `/posts` | ✓ | Create. Body (multipart for image): `title`, `content`, `image` (optional file), `published_at` (optional), `tags` (optional array of names). Returns `201`. Rate limited to 5 requests/minute per user — returns `429` past that. |
 | PUT/PATCH | `/posts/{slug}` | ✓ (owner) | Update. Same fields, all optional. `403` if not the owner. Shares a 10 requests/minute per-user rate limit with DELETE below — returns `429` past that. |
 | DELETE | `/posts/{slug}` | ✓ (owner) | Delete. `403` if not the owner. Shares the same 10 requests/minute per-user rate limit as update — returns `429` past that. |
