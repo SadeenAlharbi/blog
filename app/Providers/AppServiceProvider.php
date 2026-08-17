@@ -30,5 +30,9 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('comments', function (Request $request) {
             return Limit::perMinute(10)->by($request->user()->id);
         });
+
+        RateLimiter::for('posts', function (Request $request) {
+            return Limit::perMinute(5)->by($request->user()->id);
+        });
     }
 }
