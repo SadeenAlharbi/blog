@@ -90,3 +90,18 @@ it('rate limits post creation to 5 per minute per user', function () {
 
     $this->assertDatabaseCount('posts', 5);
 });
+
+it('rate limits the posts index and show to 60 per minute per IP, sharing one bucket', function () {
+    $post = Post::factory()->create();
+
+    for ($i = 0; $i < 30; $i++) {
+        $this->getJson('/api/v1/posts')->assertOk();
+    }
+
+    for ($i = 0; $i < 30; $i++) {
+        $this->getJson("/api/v1/posts/{$post->slug}")->assertOk();
+    }
+
+    $this->getJson('/api/v1/posts')->assertStatus(429);
+    $this->getJson("/api/v1/posts/{$post->slug}")->assertStatus(429);
+});
