@@ -16,7 +16,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/posts/{post:slug}', [PostController::class, 'show']);
     Route::get('/posts/{post:slug}/comments', [CommentController::class, 'index']);
 
-    Route::get('/tags', [TagController::class, 'index']);
+    Route::get('/tags', [TagController::class, 'index'])
+        ->middleware('throttle:tags-index');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])

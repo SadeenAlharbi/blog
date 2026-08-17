@@ -208,7 +208,7 @@ curl "http://localhost:8000/api/v1/posts?search=vision&tag=technology&page=1"
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| GET | `/tags` | — | All tags with post counts. |
+| GET | `/tags` | — | All tags with post counts. Rate limited to 30 requests/minute per IP — returns `429` past that. |
 | POST | `/tags` | ✓ | Body: `name` (unique). Rate limited to 10 requests/minute per user — returns `429` past that. |
 
 ### Status Codes
