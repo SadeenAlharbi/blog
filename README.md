@@ -20,6 +20,7 @@ authorization, testing, and a Blade + React frontend — not a typical blog scaf
 - [API Reference](#api-reference)
 - [Frontend](#frontend)
 - [Running Locally](#running-locally)
+- [License](#license)
 
 ## Features
 
@@ -246,3 +247,7 @@ php artisan queue:work
 ```
 
 Visit `http://localhost:8000`.
+
+## License
+
+Licensed under the [MIT License](LICENSE).
