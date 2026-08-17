@@ -31,6 +31,26 @@ it('rejects registration with a duplicate email', function () {
     $response->assertStatus(422)->assertJsonValidationErrors('email');
 });
 
+it('rate limits registration to 5 per minute per IP', function () {
+    for ($i = 0; $i < 5; $i++) {
+        $this->postJson('/api/v1/register', [
+            'name' => "User {$i}",
+            'email' => "user{$i}@example.com",
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ])->assertCreated();
+    }
+
+    $this->postJson('/api/v1/register', [
+        'name' => 'One too many',
+        'email' => 'onetoomany@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ])->assertStatus(429);
+
+    $this->assertDatabaseCount('users', 5);
+});
+
 it('logs in a user with valid credentials', function () {
     User::factory()->create([
         'email' => 'login@example.com',
