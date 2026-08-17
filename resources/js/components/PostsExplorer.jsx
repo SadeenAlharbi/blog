@@ -6,6 +6,26 @@ function excerpt(text, length = 130) {
     return clean.length > length ? `${clean.slice(0, length)}…` : clean;
 }
 
+// DgaCard only renders an <img> when its `image` prop is non-empty, so posts
+// without a cover image would otherwise show a blank gap. Supply a data-URI
+// placeholder (matching the Blade card partial's brand-gradient fallback)
+// rather than leaving the slot empty.
+const PLACEHOLDER_IMAGE =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="400" height="225" viewBox="0 0 400 225">
+            <defs>
+                <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#d1e9d8"/>
+                    <stop offset="100%" stop-color="#f3e6cf"/>
+                </linearGradient>
+            </defs>
+            <rect width="400" height="225" fill="url(#g)"/>
+            <text x="200" y="130" font-family="Tajawal, sans-serif" font-size="64"
+                  fill="#166534" fill-opacity="0.35" text-anchor="middle">م</text>
+        </svg>
+    `);
+
 export default function PostsExplorer({ apiUrl, tagsApiUrl, initialSearch, initialTag }) {
     const [search, setSearch] = useState(initialSearch || '');
     const [tag, setTag] = useState(initialTag || null);
@@ -103,7 +123,7 @@ export default function PostsExplorer({ apiUrl, tagsApiUrl, initialSearch, initi
                         key={post.id}
                         cardTitle={post.title}
                         description={excerpt(post.content)}
-                        image={post.image_url || ''}
+                        image={post.image_url || PLACEHOLDER_IMAGE}
                         effect="with-shadow"
                         showFeaturedIcon={false}
                         showSecondaryAction={false}
