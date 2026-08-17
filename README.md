@@ -161,6 +161,11 @@ authorization (positive and negative cases), comments (including notification di
 filtering/pagination, and the Blade web frontend (home, posts, dashboard, guest redirects, web
 registration and post creation).
 
+### Continuous Integration
+
+Every push runs the full suite via GitHub Actions (`.github/workflows/tests.yml`) — see the Tests badge
+above. The `main` branch requires the "Pest test suite" check to pass before a pull request can merge.
+
 ## API Reference
 
 Base URL: `/api/v1`. Authenticated endpoints require `Authorization: Bearer <token>` (obtained from
