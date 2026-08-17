@@ -40,6 +40,10 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($request->user()->id);
         });
 
+        RateLimiter::for('post-mutations', function (Request $request) {
+            return Limit::perMinute(10)->by($request->user()->id);
+        });
+
         RateLimiter::for('login', function (Request $request) {
             $key = Str::lower($request->string('email')).'|'.$request->ip();
 
