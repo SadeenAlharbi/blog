@@ -68,3 +68,25 @@ it('validates required fields when creating a post', function () {
 
     $response->assertStatus(422)->assertJsonValidationErrors(['title', 'content']);
 });
+
+it('rate limits post creation to 5 per minute per user', function () {
+    $user = User::factory()->create();
+
+    for ($i = 0; $i < 5; $i++) {
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/v1/posts', [
+                'title' => "Post {$i}",
+                'content' => 'Some content.',
+            ])
+            ->assertCreated();
+    }
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/v1/posts', [
+            'title' => 'One too many',
+            'content' => 'Should be throttled.',
+        ])
+        ->assertStatus(429);
+
+    $this->assertDatabaseCount('posts', 5);
+});
