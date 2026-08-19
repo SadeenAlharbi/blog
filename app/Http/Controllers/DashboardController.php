@@ -16,4 +16,15 @@ class DashboardController extends Controller
 
         return view('dashboard.index', compact('posts'));
     }
+
+    public function comments(Request $request)
+    {
+        $comments = $request->user()
+            ->comments()
+            ->with('post')
+            ->latest()
+            ->paginate(10);
+
+        return view('dashboard.comments', compact('comments'));
+    }
 }

@@ -1,5 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DgaSearchBox, DgaChip, DgaCard, DgaPagination } from 'platformscode-new-react';
+// Import from the deep stencil-generated path (NOT the package root). The root
+// index.js does `import '@platformscode/core/dist/core/core.css'` — an unlayered
+// global reset that breaks Tailwind. This path only registers the web components
+// (via each component's defineCustomElement); the global core.css is instead
+// loaded, layered, from resources/css/app.css so it can't clobber our styles.
+import {
+    DgaSearchBox,
+    DgaChip,
+    DgaCard,
+    DgaPagination,
+} from 'platformscode-new-react/dist/components/stencil-generated/components';
 
 function excerpt(text, length = 130) {
     const clean = (text || '').replace(/\s+/g, ' ').trim();
@@ -8,8 +18,7 @@ function excerpt(text, length = 130) {
 
 // DgaCard only renders an <img> when its `image` prop is non-empty, so posts
 // without a cover image would otherwise show a blank gap. Supply a data-URI
-// placeholder (matching the Blade card partial's brand-gradient fallback)
-// rather than leaving the slot empty.
+// placeholder (matching the Blade card partial's brand-gradient fallback).
 const PLACEHOLDER_IMAGE =
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(`
@@ -118,21 +127,38 @@ export default function PostsExplorer({ apiUrl, tagsApiUrl, initialSearch, initi
             <p className="text-xs text-ink-400 mb-4">{resultsLabel}</p>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {posts.map((post) => (
-                    <DgaCard
-                        key={post.id}
-                        cardTitle={post.title}
-                        description={excerpt(post.content)}
-                        image={post.image_url || PLACEHOLDER_IMAGE}
-                        effect="with-shadow"
-                        showFeaturedIcon={false}
-                        showSecondaryAction={false}
-                        primaryActionLabel="اقرأ المزيد"
-                        onPrimaryAction={() => {
-                            window.location.href = `/posts/${post.slug}`;
-                        }}
-                    />
-                ))}
+                {posts.map((post) => {
+                    const open = () => {
+                        window.location.href = `/posts/${post.slug}`;
+                    };
+                    return (
+                        // Whole card is clickable, not just the button.
+                        <div
+                            key={post.id}
+                            role="link"
+                            tabIndex={0}
+                            className="cursor-pointer"
+                            onClick={open}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    open();
+                                }
+                            }}
+                        >
+                            <DgaCard
+                                cardTitle={post.title}
+                                description={excerpt(post.content)}
+                                image={post.image_url || PLACEHOLDER_IMAGE}
+                                effect="with-shadow"
+                                showFeaturedIcon={false}
+                                showSecondaryAction={false}
+                                primaryActionLabel="اقرأ المزيد"
+                                onPrimaryAction={open}
+                            />
+                        </div>
+                    );
+                })}
             </div>
 
             {meta.last_page > 1 && (
