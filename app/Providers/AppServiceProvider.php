@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Comment;
 use App\Models\Post;
+use App\Policies\CommentPolicy;
 use App\Policies\PostPolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::policy(Post::class, PostPolicy::class);
+        Gate::policy(Comment::class, CommentPolicy::class);
 
         RateLimiter::for('comments', function (Request $request) {
             return Limit::perMinute(10)->by($request->user()->id);

@@ -12,22 +12,22 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="min-h-screen bg-ink-25 text-ink-800 antialiased flex flex-col">
+        <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-3 focus:start-3 focus:rounded-lg focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:text-white">
+            تخطَّ إلى المحتوى
+        </a>
+
         @include('partials.nav')
 
-        <main class="flex-1">
+        <main id="main-content" class="flex-1">
             @if (session('success'))
-                <div class="max-w-5xl mx-auto mt-4 px-4">
-                    <div class="rounded-lg bg-brand-50 border border-brand-200 text-brand-700 px-4 py-3 text-sm">
-                        {{ session('success') }}
-                    </div>
+                <div class="max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8">
+                    <x-alert type="success">{{ session('success') }}</x-alert>
                 </div>
             @endif
 
             @if (session('error'))
-                <div class="max-w-5xl mx-auto mt-4 px-4">
-                    <div class="rounded-lg bg-red-50 border border-red-200 text-red-700 px-4 py-3 text-sm">
-                        {{ session('error') }}
-                    </div>
+                <div class="max-w-7xl mx-auto mt-4 px-4 sm:px-6 lg:px-8">
+                    <x-alert type="error">{{ session('error') }}</x-alert>
                 </div>
             @endif
 

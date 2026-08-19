@@ -1,3 +1,20 @@
+/*
+ * Cascade-layer order MUST be declared before importing anything.
+ * Platforms Code's core.css is a full, UNLAYERED Meyer-style reset
+ * (`*{margin:0;padding:0}`, `h1..h6,p{font-size:100%;font:inherit}`,
+ * `body{font-family:"IBM Plex Sans Arabic"}`, `html{font-size:62.5%}`,
+ * `a{color:inherit}` …). Unlayered CSS beats Tailwind v4's layered
+ * utilities, so imported normally it silently wipes out spacing, font
+ * sizes, fonts and link colors across the whole app. We fix this at the
+ * root: pull core.css into a low-priority `vendor` layer so it still
+ * provides its :root design tokens (which the Dga web components read)
+ * but LOSES to Tailwind's base/utilities. The matching change in
+ * resources/js/app bundle imports the React components from the deep
+ * `stencil-generated` path so core.css is NOT also injected unlayered.
+ */
+@layer vendor, theme, base, components, utilities;
+
+@import '@platformscode/core/dist/core/core.css' layer(vendor);
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -18,6 +35,9 @@
     --color-brand-700: oklch(30% 0.085 152);
     --color-brand-800: oklch(23% 0.065 152);
     --color-brand-900: oklch(17% 0.045 152);
+
+    /* Deep "SA flag" green — reserved for the footer / dark bands (matches DGA template #074D31) */
+    --color-flag-900: oklch(31% 0.07 158);
 
     /* Warm sand/heritage accent — used sparingly for highlights, badges, hero accents */
     --color-sand-50: oklch(97.5% 0.02 75);
@@ -42,14 +62,84 @@
     --color-ink-900: oklch(15% 0.008 90);
 }
 
-/*
- * platformscode-new-react bundles @platformscode/core's core.css, which sets a
- * global, unscoped `html { font-size: 62.5%/75% }` (a 10px-base rem convention
- * for its own components). That silently shrinks every rem-based Tailwind
- * utility across our entire UI (spacing, sizing, max-w-*, text sizes) to ~62%
- * of intended size, since Tailwind v4's scale is rem-based throughout. We
- * don't control that package's CSS, so force the standard 16px root back here.
- */
+/* ---------------------------------------------------------------------------
+ * Unlayered base — these intentionally sit OUTSIDE all layers so they beat
+ * both the vendor reset and, where needed, Tailwind. Kept minimal.
+ * ------------------------------------------------------------------------- */
+
+/* Restore a 16px root so Tailwind's rem-based scale renders at intended size
+ * (core.css sets html{font-size:62.5%} in the vendor layer; this wins). */
 html {
-    font-size: 100% !important;
+    font-size: 100%;
+    scroll-behavior: smooth;
+}
+
+/* Guarantee the Arabic UI font (vendor sets body to a font that 404s here). */
+body {
+    font-family: var(--font-sans);
+}
+
+/* Media never exceeds its column (a real overflow fix, not a mask).
+ * No `height:auto` here: being unlayered it would beat Tailwind's `h-full` on
+ * fixed-ratio card images (object-cover), forcing each image to its natural
+ * height and breaking card consistency. Content images default to auto height. */
+img,
+video {
+    max-width: 100%;
+}
+
+/* Long unbreakable strings (English titles/URLs) wrap instead of overflowing. */
+h1, h2, h3, p, a, li, span {
+    overflow-wrap: break-word;
+}
+
+::selection {
+    background: color-mix(in oklab, var(--color-brand-500) 22%, transparent);
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+}
+
+/* Long-form article content (used by posts/show); @tailwindcss/typography isn't installed. */
+.article-content {
+    color: var(--color-ink-700);
+    font-size: 1.0625rem;
+    line-height: 2;
+    overflow-wrap: break-word;
+}
+.article-content > * + * {
+    margin-top: 1.1rem;
+}
+.article-content h2 {
+    color: var(--color-ink-900);
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.35;
+    margin-top: 2rem;
+}
+.article-content h3 {
+    color: var(--color-ink-900);
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-top: 1.75rem;
+}
+.article-content ul,
+.article-content ol {
+    padding-inline-start: 1.5rem;
+}
+.article-content ul {
+    list-style: disc;
+}
+.article-content ol {
+    list-style: decimal;
+}
+.article-content li + li {
+    margin-top: 0.4rem;
+}
+.article-content a {
+    color: var(--color-brand-600);
+    text-decoration: underline;
+    text-underline-offset: 2px;
 }
