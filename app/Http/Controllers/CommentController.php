@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCommentRequest;
+use App\Models\Comment;
 use App\Models\Post;
 use App\Notifications\NewCommentNotification;
 
@@ -20,5 +21,15 @@ class CommentController extends Controller
         }
 
         return redirect()->route('posts.show', $post)->with('success', 'تمت إضافة تعليقك بنجاح.');
+    }
+
+    public function destroy(Comment $comment)
+    {
+        // Server-side ownership check — a user can only delete their own comment.
+        $this->authorize('delete', $comment);
+
+        $comment->delete();
+
+        return back()->with('success', 'تم حذف التعليق.');
     }
 }
