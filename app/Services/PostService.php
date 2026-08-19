@@ -73,16 +73,37 @@ class PostService
         $post->delete();
     }
 
-    private function syncTags(Post $post, array $tagNames): void
+    /**
+     * Attach tags from the fixed category list only. Accepts either canonical
+     * slugs (from the web form's checkboxes) or canonical Arabic names (API),
+     * plus any already-existing tag matched by slug/name. Anything else is
+     * ignored — no arbitrary tag creation, so junk tags can't be introduced.
+     */
+    private function syncTags(Post $post, array $values): void
     {
-        $tagIds = collect($tagNames)
+        $categories = Tag::categories(); // [slug => name]
+
+        $tagIds = collect($values)
+            ->map(fn ($v) => is_string($v) ? trim($v) : $v)
             ->filter()
-            ->map(function (string $name) {
-                return Tag::firstOrCreate(
-                    ['slug' => Str::slug($name)],
-                    ['name' => $name]
-                )->id;
-            });
+            ->map(function ($value) use ($categories) {
+                if (isset($categories[$value])) {
+                    return Tag::firstOrCreate(['slug' => $value], ['name' => $categories[$value]])->id;
+                }
+
+                $slug = array_search($value, $categories, true);
+                if ($slug !== false) {
+                    return Tag::firstOrCreate(['slug' => $slug], ['name' => $value])->id;
+                }
+
+                return Tag::query()
+                    ->where('slug', $value)
+                    ->orWhere('name', $value)
+                    ->value('id');
+            })
+            ->filter()
+            ->unique()
+            ->values();
 
         $post->tags()->sync($tagIds);
     }
