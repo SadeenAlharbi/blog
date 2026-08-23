@@ -32,8 +32,11 @@ authorization, testing, and a Blade + React frontend — not a typical blog scaf
 - **Versioned REST API** (`/api/v1`) with consistent JSON responses, API Resources, pagination metadata,
   search, tag filtering, and sorting.
 - **Sanctum token authentication**: register, login, logout, authenticated profile.
-- **Comments** with server-side validation and a **queued email notification** to the post owner (the
-  request returns immediately; the mail is dispatched by the queue worker).
+- **Comments** with server-side validation and, on each new comment, a **queued dual-channel notification**
+  to the post owner — an in-site bell notification (`database`) and an Arabic/RTL branded email (`mail`).
+  The comment request returns immediately; both are delivered by the queue worker.
+- **In-site notification bell** with an unread badge, a recent-notifications dropdown, mark-as-read /
+  mark-all-as-read, an empty state, and a full notifications page — RTL and matching the site design.
 - **Tag system** built on the existing `posts`/`tags`/`post_tag` schema — create, attach, filter, search.
 - **Image uploads** via Laravel Storage (`public` disk, `storage:link`), validated by type and size.
 - **Blade + React frontend**: server-rendered, SEO-friendly pages for content and forms; a real React
@@ -140,15 +143,77 @@ Two auth layers, both backed by the same `users` table:
 
 ## Queue
 
-New-comment notifications are queued (database driver) so the comment request never waits on mail
-delivery. Run a worker locally to process them:
+New-comment notifications are queued (database driver) so the comment request never waits on delivery.
+Run a worker locally to process them:
 
 ```bash
-php artisan queue:work
+php artisan queue:work --tries=3
 ```
 
-With `MAIL_MAILER=log`, sent mail is written to `storage/logs/laravel.log` instead of actually being
-delivered — convenient for local verification.
+The notification declares `$tries = 3` and `$backoff = 30`; if delivery keeps failing it is retried and
+then recorded in the `failed_jobs` table (`php artisan queue:failed` to list, `queue:retry` to re-run).
+
+## Comment Notifications
+
+When a user comments on a post, the post's **owner** (`$post->user`) is notified — unless they are the
+commenter themselves (no self-notification, and one comment produces exactly one notification; there is
+no observer/event duplicating it). The whole thing is one `App\Notifications\NewCommentNotification`
+(`implements ShouldQueue`) delivered on two channels:
+
+**1. Database notification (in-site bell)** — `via()` includes `database`, so a row is written to the
+`notifications` table (`toArray()` stores the commenter name, post title, comment excerpt, a deep-link
+URL, and ids). It appears in the header bell for the owner:
+
+- unread count **badge**,
+- dropdown of the latest notifications + **empty state**,
+- **Mark as read** (clicking a notification marks it read and opens the comment) and **Mark all as read**,
+- a full list page at `/notifications`,
+- `read_at` distinguishes read vs. unread.
+
+Routes (auth-only): `GET /notifications`, `POST /notifications/{id}/read`, `POST /notifications/read-all`.
+
+**2. Email notification** — `via()` includes `mail`; `toMail()` renders `resources/views/emails/comment-added.blade.php`,
+an Arabic, RTL, brand-styled email (subject **«تعليق جديد على مقالك»**) containing the owner name, article
+title, commenter name, comment excerpt, timestamp, and a **«عرض التعليق»** button linking to the comment.
+
+### Queue worker
+
+Both channels are dispatched by the queue worker (see **Queue** above):
+
+```bash
+php artisan queue:work --tries=3
+```
+
+### Mail settings
+
+Configure the mailer in `.env` (no secrets belong in Git — `.env` is git-ignored):
+
+```env
+MAIL_MAILER=log            # local: writes the email to storage/logs/laravel.log
+# For real delivery use smtp and set:
+# MAIL_MAILER=smtp
+# MAIL_HOST=
+# MAIL_PORT=
+# MAIL_USERNAME=
+# MAIL_PASSWORD=
+# MAIL_ENCRYPTION=
+# MAIL_FROM_ADDRESS=
+# MAIL_FROM_NAME="${APP_NAME}"
+```
+
+With `MAIL_MAILER=log`, the email is written to `storage/logs/laravel.log` instead of being sent —
+convenient for local verification.
+
+### Testing the notifications
+
+```bash
+php artisan test --filter=Notification   # bell/database + channels + read/unread
+php artisan test --filter=Comment        # comment flow + email content
+```
+
+Tests cover: a database notification is created for the correct owner on a new comment, both `database`
+and `mail` channels fire once (no duplicate), mark-as-read / mark-all-as-read, read vs. unread counts,
+authorization (a user can't read another user's notification), and the email's dynamic content.
 
 ## Testing
 

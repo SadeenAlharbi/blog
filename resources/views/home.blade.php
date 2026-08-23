@@ -8,13 +8,15 @@
     // Curated homepage highlight cards (navigation into the articles page).
     // Concepts without a single canonical tag link via content search so they
     // always surface real, relevant articles.
+    // Each card carries its own barely-perceptible diagonal tint (spec colors),
+    // applied via inline style so the exact hex gradients render without a rebuild.
     $categoryCards = [
-        ['label' => 'التاريخ', 'desc' => 'جذور ممتدة وقصة وطن.', 'icon' => 'library', 'href' => route('posts.index', ['tag' => 'history'])],
-        ['label' => 'رؤية 2030', 'desc' => 'مستقبل نصنعه معًا.', 'icon' => 'eye', 'href' => route('posts.index', ['tag' => 'vision-2030'])],
-        ['label' => 'الاقتصاد', 'desc' => 'تحولات اقتصادية تصنع مستقبلًا مزدهرًا.', 'icon' => 'chart', 'href' => route('posts.index', ['tag' => 'economy'])],
-        ['label' => 'التقنية والذكاء الاصطناعي', 'desc' => 'ابتكار يقود المستقبل.', 'icon' => 'cpu', 'href' => route('posts.index', ['search' => 'الذكاء الاصطناعي'])],
-        ['label' => 'الثقافة والتراث', 'desc' => 'هوية أصيلة تتجدد.', 'icon' => 'sparkles', 'href' => route('posts.index', ['tag' => 'culture'])],
-        ['label' => 'السياحة والمجتمع', 'desc' => 'وجهات وتجارب ومجتمع يعكس تنوع المملكة.', 'icon' => 'map', 'href' => route('posts.index', ['search' => 'السياحة'])],
+        ['label' => 'التاريخ', 'desc' => 'جذور ممتدة وقصة وطن.', 'icon' => 'library', 'href' => route('posts.index', ['tag' => 'history']), 'tint' => 'linear-gradient(135deg,#ffffff 0%,#faf7f1 100%)'],
+        ['label' => 'رؤية 2030', 'desc' => 'مستقبل نصنعه معًا.', 'icon' => 'eye', 'href' => route('posts.index', ['tag' => 'vision-2030']), 'tint' => 'linear-gradient(135deg,#ffffff 0%,#f4f7f6 100%)'],
+        ['label' => 'الاقتصاد', 'desc' => 'تحولات اقتصادية تصنع مستقبلًا مزدهرًا.', 'icon' => 'chart', 'href' => route('posts.index', ['tag' => 'economy']), 'tint' => 'linear-gradient(135deg,#ffffff 0%,#f1f8f5 100%)'],
+        ['label' => 'التقنية والذكاء الاصطناعي', 'desc' => 'ابتكار يقود المستقبل.', 'icon' => 'cpu', 'href' => route('posts.index', ['search' => 'الذكاء الاصطناعي']), 'tint' => 'linear-gradient(135deg,#ffffff 0%,#eef8f5 100%)'],
+        ['label' => 'الثقافة والتراث', 'desc' => 'هوية أصيلة تتجدد.', 'icon' => 'sparkles', 'href' => route('posts.index', ['tag' => 'culture']), 'tint' => 'linear-gradient(135deg,#ffffff 0%,#fbf5f2 100%)'],
+        ['label' => 'السياحة والمجتمع', 'desc' => 'وجهات وتجارب ومجتمع يعكس تنوع المملكة.', 'icon' => 'map', 'href' => route('posts.index', ['search' => 'السياحة']), 'tint' => 'linear-gradient(135deg,#ffffff 0%,#f2f7f8 100%)'],
     ];
 
     $icons = [
@@ -26,6 +28,10 @@
         'map' => '<path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0Z"/>',
     ];
 
+    // Very faint decorative geometric (diamond-grid) pattern, fully percent-encoded
+    // so it drops straight into an unquoted CSS url(). Used at ~0.03 opacity only.
+    $pattern = "data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2748%27%20height=%2748%27%20viewBox=%270%200%2048%2048%27%3E%3Cpath%20d=%27M24%202L46%2024L24%2046L2%2024Z%27%20fill=%27none%27%20stroke=%27%23145e46%27%20stroke-width=%271%27/%3E%3Cpath%20d=%27M24%2014L34%2024L24%2034L14%2024Z%27%20fill=%27none%27%20stroke=%27%23145e46%27%20stroke-width=%271%27/%3E%3C/svg%3E";
+
     $postsTotal = \App\Models\Post::count();
     $writersTotal = \App\Models\User::count();
     $categoriesTotal = count(\App\Models\Tag::categories());
@@ -33,41 +39,16 @@
 
 @section('content')
     {{-- ============================= HERO ============================= --}}
+    {{-- ⚠️ Do not modify the Hero. Background = hero-saudi.jpg + soft white overlay. --}}
     <section class="relative overflow-hidden border-b border-ink-100 bg-ink-25">
-        {{-- Decorative Saudi line-art backdrop: skyline + palms + arcs. Purely
-             decorative (aria-hidden), very high transparency, behind the text. --}}
-        <div aria-hidden="true" class="pointer-events-none absolute inset-0 overflow-hidden">
-            <svg class="absolute -top-24 -start-28 w-[32rem] h-[32rem] text-brand-700" style="opacity:.05" viewBox="0 0 400 400" fill="none" stroke="currentColor">
-                <circle cx="200" cy="200" r="70" stroke-width="1.5" />
-                <circle cx="200" cy="200" r="135" stroke-width="1.5" />
-                <circle cx="200" cy="200" r="200" stroke-width="1.5" />
-            </svg>
-
-            <svg class="absolute inset-x-0 bottom-0 w-full h-[220px] text-brand-800" style="opacity:.08" viewBox="0 0 1440 260" fill="none" stroke="currentColor" stroke-width="1.6" preserveAspectRatio="xMidYMax slice">
-                <path d="M0 252 H1440" />
-                <path d="M60 252 V178 H120 V252" />
-                <path d="M120 252 V150 H160 V252" />
-                <path d="M160 252 V200 H210 V252" />
-                <path d="M255 252 V80 Q300 52 345 80 V252" />
-                <path d="M283 104 Q300 140 317 104" />
-                <path d="M370 252 V162 H420 V252" />
-                <path d="M445 252 V96 L466 56 L487 96 V252" />
-                <path d="M512 252 V132 H578 V252" />
-                <path d="M628 252 V188" />
-                <path d="M628 188 Q600 176 584 182 M628 188 Q656 176 672 182 M628 188 Q610 166 598 156 M628 188 Q646 166 658 156 M628 188 Q628 162 628 150" />
-                <path d="M700 252 V170 H760 V252" />
-                <path d="M760 252 V120 H812 V252" />
-                <path d="M840 252 V186 H892 V252" />
-                <path d="M940 252 V192" />
-                <path d="M940 192 Q914 181 899 187 M940 192 Q966 181 981 187 M940 192 Q924 171 913 161 M940 192 Q956 171 967 161 M940 192 Q940 167 940 155" />
-                <path d="M1010 252 V150 H1070 V252" />
-                <path d="M1070 252 V186 H1110 V252" />
-                <path d="M1140 252 V122 H1196 V252" />
-                <path d="M1230 252 V104 L1250 66 L1270 104 V252" />
-                <path d="M1300 252 V176 H1360 V252" />
-                <path d="M1400 252 V196" />
-                <path d="M1400 196 Q1378 186 1365 191 M1400 196 Q1422 186 1435 191 M1400 196 Q1386 176 1376 167 M1400 196 Q1414 176 1424 167 M1400 196 Q1400 172 1400 161" />
-            </svg>
+        {{-- Real Saudi hero photograph (hero-saudi.jpg) used ONLY here as the
+             section background. A soft white overlay keeps the artwork visible
+             but the text as the primary element. Purely decorative (aria-hidden). --}}
+        <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+            <div class="absolute inset-0 bg-center bg-cover"
+                 style="background-image:url('{{ asset('images/hero-saudi.jpg') }}')"></div>
+            {{-- Soft white overlay: image stays clear, text stays primary. --}}
+            <div class="absolute inset-0 bg-gradient-to-b from-white/85 via-white/75 to-white/90"></div>
         </div>
 
         <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
@@ -106,9 +87,47 @@
         </div>
     </section>
 
+    {{-- ===================== EXPLORE / CATEGORIES ===================== --}}
+    {{-- Near-white section, centered container, compact spacing, 6 tinted cards. --}}
+    <section class="border-b border-ink-100" style="background:#fbfdfc">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
+            <div class="text-center max-w-2xl mx-auto mb-9">
+                <h2 class="text-2xl sm:text-3xl font-bold text-ink-900">استكشف السعودية من زواياها</h2>
+                <p class="text-sm sm:text-base text-ink-500 mt-2">مواضيع معرفية تغطي كل ما يصنع قصة المملكة</p>
+            </div>
+
+            <div class="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                @foreach ($categoryCards as $card)
+                    <a href="{{ $card['href'] }}"
+                       class="group relative overflow-hidden flex items-start gap-4 rounded-2xl border border-ink-100 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lg hover:shadow-ink-900/5"
+                       style="background:{{ $card['tint'] }}">
+                        {{-- Barely-there hover wash so the background shifts a touch. --}}
+                        <span aria-hidden="true" class="pointer-events-none absolute inset-0 bg-brand-50 opacity-0 group-hover:opacity-30 transition-opacity duration-200"></span>
+
+                        <span class="relative z-10 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/70 text-brand-600 ring-1 ring-brand-100 transition-colors group-hover:bg-brand-600 group-hover:text-white">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true">{!! $icons[$card['icon']] !!}</svg>
+                        </span>
+                        <div class="relative z-10 min-w-0 flex-1">
+                            <h3 class="font-bold text-ink-900 group-hover:text-brand-700 transition-colors">{{ $card['label'] }}</h3>
+                            <p class="text-sm text-ink-500 mt-1 leading-relaxed line-clamp-2">{{ $card['desc'] }}</p>
+                        </div>
+                        <span class="relative z-10 shrink-0 text-ink-300 group-hover:text-brand-600 transition-colors mt-0.5">
+                            <svg class="h-5 w-5 rtl:rotate-180" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
+                        </span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    </section>
+
     {{-- ======================= LATEST ARTICLES ======================= --}}
-    <section class="border-b border-ink-100 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+    {{-- Premium light background: soft radial gradients + faint pattern + floating cards.
+         All article data is REAL — pulled from $latestPosts (DB), never hard-coded. --}}
+    <section class="relative border-b border-ink-100"
+             style="background:radial-gradient(circle at 85% 15%,rgba(19,111,82,0.045),transparent 32%),radial-gradient(circle at 10% 80%,rgba(215,191,155,0.035),transparent 30%),#f7faf8">
+        <div aria-hidden="true" class="pointer-events-none absolute inset-0" style="background-image:url({{ $pattern }});background-size:48px 48px;opacity:.03"></div>
+
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16">
             <div class="flex items-end justify-between gap-4 mb-8">
                 <div>
                     <h2 class="text-2xl sm:text-3xl font-bold text-ink-900">أحدث المقالات</h2>
@@ -131,13 +150,16 @@
                             $readingTime = max(1, (int) ceil($words / 180));
                             $badge = $post->tags->first();
                         @endphp
-                        <article class="group relative flex flex-col rounded-2xl border border-ink-100 bg-white overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-ink-900/5">
-                            <div class="aspect-[16/10] bg-gradient-to-br from-brand-100 to-sand-100">
+                        <article class="group relative flex flex-col rounded-2xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+                                 style="background:rgba(255,255,255,0.92);border:1px solid rgba(25,70,55,0.07);box-shadow:0 8px 28px rgba(20,55,45,0.055)">
+                            <div class="relative aspect-[16/9] bg-gradient-to-br from-brand-100 to-sand-100">
                                 @if ($imageUrl)
                                     <img src="{{ $imageUrl }}" alt="{{ $post->title }}" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
                                 @else
                                     <div class="w-full h-full flex items-center justify-center"><x-logo :size="48" /></div>
                                 @endif
+                                {{-- Very light hover overlay only. --}}
+                                <div aria-hidden="true" class="absolute inset-0 bg-ink-900/0 group-hover:bg-ink-900/5 transition-colors duration-200"></div>
                             </div>
                             <div class="flex flex-col flex-1 p-5">
                                 @if ($badge)
@@ -165,100 +187,79 @@
         </div>
     </section>
 
-    {{-- ===================== EXPLORE / CATEGORIES ===================== --}}
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-        <div class="text-center max-w-2xl mx-auto mb-10">
-            <h2 class="text-2xl sm:text-3xl font-bold text-ink-900">استكشف السعودية من زواياها</h2>
-            <p class="text-sm sm:text-base text-ink-500 mt-2">مواضيع معرفية تغطي كل ما يصنع قصة المملكة</p>
-        </div>
-
-        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            @foreach ($categoryCards as $card)
-                <a href="{{ $card['href'] }}"
-                   class="group flex items-start gap-4 rounded-2xl border border-ink-100 bg-white p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lg hover:shadow-ink-900/5">
-                    <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600 ring-1 ring-brand-100 transition-colors group-hover:bg-brand-600 group-hover:text-white">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true">{!! $icons[$card['icon']] !!}</svg>
-                    </span>
-                    <div class="min-w-0 flex-1">
-                        <h3 class="font-bold text-ink-900 group-hover:text-brand-700 transition-colors">{{ $card['label'] }}</h3>
-                        <p class="text-sm text-ink-500 mt-1 leading-relaxed">{{ $card['desc'] }}</p>
+    {{-- =================== STATS (light, compact bar) =================== --}}
+    <section class="bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+            <div class="mx-auto rounded-2xl border border-ink-100"
+                 style="max-width:1200px;padding-block:22px;background:radial-gradient(circle at 15% 50%,rgba(11,127,91,0.06),transparent 35%),radial-gradient(circle at 85% 50%,rgba(91,135,116,0.04),transparent 35%),linear-gradient(135deg,#f3f9f6 0%,#edf6f2 50%,#f6faf8 100%)">
+                <div class="grid grid-cols-2 lg:grid-cols-4 px-4 sm:px-6">
+                    <div class="flex flex-col items-center text-center px-4 py-3">
+                        <span class="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/70 text-brand-600 ring-1 ring-brand-100">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .32-.988l5.519-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" /></svg>
+                        </span>
+                        <p class="text-2xl sm:text-3xl font-extrabold text-brand-700">100%</p>
+                        <p class="text-xs sm:text-sm text-ink-500 mt-1">محتوى موثّق</p>
                     </div>
-                    <span class="shrink-0 text-ink-300 group-hover:text-brand-600 transition-colors mt-1">
-                        <svg class="h-5 w-5 rtl:rotate-180" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
-                    </span>
-                </a>
-            @endforeach
+                    <div class="flex flex-col items-center text-center px-4 py-3 border-s border-ink-200/70 lg:border-s">
+                        <span class="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/70 text-brand-600 ring-1 ring-brand-100">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" /></svg>
+                        </span>
+                        <p class="text-2xl sm:text-3xl font-extrabold text-brand-700">{{ $categoriesTotal }}</p>
+                        <p class="text-xs sm:text-sm text-ink-500 mt-1">تصنيف معرفي</p>
+                    </div>
+                    <div class="flex flex-col items-center text-center px-4 py-3 lg:border-s border-ink-200/70">
+                        <span class="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/70 text-brand-600 ring-1 ring-brand-100">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+                        </span>
+                        <p class="text-2xl sm:text-3xl font-extrabold text-brand-700">{{ $writersTotal }}</p>
+                        <p class="text-xs sm:text-sm text-ink-500 mt-1">كاتب ومساهم</p>
+                    </div>
+                    <div class="flex flex-col items-center text-center px-4 py-3 border-s border-ink-200/70">
+                        <span class="mb-2 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/70 text-brand-600 ring-1 ring-brand-100">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" /></svg>
+                        </span>
+                        <p class="text-2xl sm:text-3xl font-extrabold text-brand-700">{{ $postsTotal }}</p>
+                        <p class="text-xs sm:text-sm text-ink-500 mt-1">مقال معرفي</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
-    {{-- ==================== SAUDI TODAY (visual) ===================== --}}
-    <section class="border-t border-ink-100 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-            <div class="grid gap-8 lg:grid-cols-2 items-center">
-                {{-- Decorative map/arcs panel --}}
-                <div class="relative overflow-hidden rounded-3xl border border-ink-100 bg-ink-25 aspect-[16/10] order-last lg:order-first">
-                    <div aria-hidden="true" class="absolute inset-0 flex items-center justify-center text-brand-700" style="opacity:.12">
-                        <svg class="w-3/4 h-3/4" viewBox="0 0 300 300" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <circle cx="150" cy="150" r="60" />
-                            <circle cx="150" cy="150" r="105" />
-                            <circle cx="150" cy="150" r="150" />
-                            <path d="M150 60 V240 M60 150 H240" stroke-width="1.5" />
-                        </svg>
-                    </div>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <x-logo :size="64" />
-                    </div>
-                </div>
+    {{-- ======================== ABOUT (compact) ======================= --}}
+    {{-- Short image + text band. RTL: text right, real Saudi image left. --}}
+    <section class="relative overflow-hidden"
+             style="background:radial-gradient(circle at 20% 50%,rgba(10,120,85,0.035),transparent 35%),#ffffff">
+        <div aria-hidden="true" class="pointer-events-none absolute inset-y-0 start-0 w-1/3" style="background-image:url({{ $pattern }});background-size:48px 48px;opacity:.035"></div>
 
-                <div>
-                    <span class="inline-flex items-center gap-2 text-xs font-semibold text-brand-700 mb-4">
-                        <span class="h-px w-8 bg-brand-300"></span> السعودية اليوم
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="padding-block:45px">
+            <div class="grid gap-8 lg:grid-cols-12 items-center">
+                {{-- Text (right in RTL) --}}
+                <div class="lg:col-span-7">
+                    <span class="inline-flex items-center gap-2 text-xs font-semibold text-brand-700 mb-3">
+                        <span class="h-px w-8 bg-brand-300"></span> عن المنصة
                     </span>
-                    <h2 class="text-2xl sm:text-4xl font-bold text-ink-900 leading-snug mb-4">السعودية اليوم.. تصنع المستقبل</h2>
-                    <p class="text-ink-500 leading-loose sm:text-lg">
-                        من مشاريع عملاقة إلى مبادرات نوعية، تمضي المملكة بخطى واثقة نحو مستقبل أكثر ازدهارًا واستدامة.
+                    <h2 class="font-bold text-ink-900 mb-3" style="font-size:26px;line-height:1.35">عن المنصة</h2>
+                    <p class="text-ink-500 max-w-xl" style="font-size:15px;line-height:1.9">
+                        منصة معرفية سعودية توثّق قصة المملكة وتحولاتها، وتقدّم محتوى موثوقًا يعرّفك بتاريخها، رؤيتها،
+                        اقتصادها، ثقافتها، وتقنيتها، ويواكب ما تصنعه السعودية اليوم نحو المستقبل.
                     </p>
-                    <div class="mt-6">
-                        <a href="{{ route('posts.index') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 text-white px-6 py-3 text-sm font-semibold hover:bg-brand-700 transition-colors">
+                    <div class="mt-5">
+                        <a href="{{ route('posts.index') }}" class="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-brand-700 transition-colors">
                             تصفّح المقالات
                             <svg class="h-4 w-4 rtl:rotate-180" fill="none" stroke="currentColor" stroke-width="1.75" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
                         </a>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
 
-    {{-- =================== STATS (last section) ===================== --}}
-    <section class="bg-[#074D31] text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid gap-8 grid-cols-2 lg:grid-cols-4 text-center">
-            <div>
-                <div class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20 text-sand-300">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 0 1 1.04 0l2.125 5.111a.563.563 0 0 0 .475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 0 0-.182.557l1.285 5.385a.562.562 0 0 1-.84.61l-4.725-2.885a.562.562 0 0 0-.586 0L6.982 20.54a.562.562 0 0 1-.84-.61l1.285-5.386a.562.562 0 0 0-.182-.557l-4.204-3.602a.562.562 0 0 1 .32-.988l5.519-.442a.563.563 0 0 0 .475-.345L11.48 3.5Z" /></svg>
+                {{-- Image (left in RTL) — no card frame; edges are masked so the
+                     photo melts into the section background (soft toward the text
+                     side and the top), matching the reference. --}}
+                <div class="lg:col-span-5 order-first lg:order-last">
+                    <img src="{{ asset('images/about-saudi.jpg') }}" alt="علم المملكة العربية السعودية" loading="lazy"
+                         class="w-full h-64 sm:h-80 object-cover select-none pointer-events-none"
+                         style="-webkit-mask-image:linear-gradient(to right,#000 65%,transparent 100%),linear-gradient(to top,#000 82%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to right,#000 65%,transparent 100%),linear-gradient(to top,#000 82%,transparent 100%);mask-composite:intersect;">
                 </div>
-                <p class="text-3xl sm:text-4xl font-extrabold text-sand-300">100%</p>
-                <p class="text-sm text-white/70 mt-1">محتوى موثّق</p>
-            </div>
-            <div>
-                <div class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20 text-sand-300">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" /></svg>
-                </div>
-                <p class="text-3xl sm:text-4xl font-extrabold text-sand-300">{{ $categoriesTotal }}</p>
-                <p class="text-sm text-white/70 mt-1">تصنيف معرفي</p>
-            </div>
-            <div>
-                <div class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20 text-sand-300">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
-                </div>
-                <p class="text-3xl sm:text-4xl font-extrabold text-sand-300">{{ $writersTotal }}</p>
-                <p class="text-sm text-white/70 mt-1">كاتب ومساهم</p>
-            </div>
-            <div>
-                <div class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20 text-sand-300">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25" /></svg>
-                </div>
-                <p class="text-3xl sm:text-4xl font-extrabold text-sand-300">{{ $postsTotal }}</p>
-                <p class="text-sm text-white/70 mt-1">مقال معرفي</p>
             </div>
         </div>
     </section>

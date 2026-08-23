@@ -1,24 +1,22 @@
 {{--
-    Saudi-green platform footer, adapted from the DGA design-system footer template.
-    Kept as a real <footer> (block by default, so Platforms Code's core.css reset is harmless here).
-    Pure Blade + Tailwind — no JS dependency, RTL-correct, no fixed widths (overflow-safe).
+    Minimal Saudi-green footer: 3 sections (brand + two short link lists), one-line
+    tagline, social icons, compact copyright bar. Same visual identity (deep green,
+    logo, fonts, RTL) — just shorter and less crowded.
 --}}
-<footer class="bg-[#074D31] text-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-8">
-        <div class="grid gap-10 md:grid-cols-12">
-            {{-- Brand + about --}}
-            <div class="md:col-span-4">
-                <div class="flex items-center gap-2.5 mb-4">
+<footer class="text-white" style="background:radial-gradient(circle at 85% 20%,rgba(80,160,125,0.08),transparent 30%),#063f32">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+        <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {{-- Brand (short) --}}
+            <div class="sm:col-span-2">
+                <div class="flex items-center gap-2.5 mb-2.5">
                     <x-logo :size="40" />
                     <span class="font-bold leading-tight">منصة المعرفة السعودية</span>
                 </div>
-                <h3 class="text-sm font-semibold pb-2 mb-3 border-b border-white/20">عن المنصة</h3>
-                <p class="text-sm text-white/70 leading-relaxed max-w-sm">
-                    منصة معرفية سعودية توثّق قصة المملكة وتحولاتها، وتقدّم محتوى موثوقًا يعرّفك بتاريخها، رؤيتها،
-                    اقتصادها، ثقافتها، وتقنيتها، ويواكب ما تصنعه السعودية نحو المستقبل.
+                <p class="text-sm text-white/65 leading-relaxed max-w-sm">
+                    منصة معرفية سعودية توثّق قصة المملكة وتحولاتها، وتواكب ما تصنعه نحو المستقبل.
                 </p>
 
-                <div class="flex items-center gap-2.5 mt-6">
+                <div class="flex items-center gap-2.5 mt-4">
                     {{-- X --}}
                     <a href="#" aria-label="X" class="inline-flex h-9 w-9 items-center justify-center rounded-lg ring-1 ring-white/25 hover:bg-white/10 transition-colors">
                         <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -42,54 +40,36 @@
                 </div>
             </div>
 
-            {{-- Explore --}}
-            <div class="md:col-span-3">
-                <h3 class="text-sm font-semibold pb-2 mb-3 border-b border-white/20">استكشف</h3>
-                <ul class="space-y-2.5 text-sm text-white/75">
-                    <li><a href="{{ route('posts.index') }}" class="hover:text-white transition-colors">جميع المقالات</a></li>
+            {{-- Explore (short) --}}
+            <div>
+                <h3 class="text-sm font-semibold pb-1.5 mb-2 border-b border-white/20">استكشف</h3>
+                <ul class="space-y-1.5 text-sm text-white/70">
                     <li><a href="{{ route('home') }}" class="hover:text-white transition-colors">الرئيسية</a></li>
-                    <li><a href="{{ route('posts.index', ['tag' => 'vision-2030']) }}" class="hover:text-white transition-colors">رؤية السعودية 2030</a></li>
+                    <li><a href="{{ route('posts.index') }}" class="hover:text-white transition-colors">جميع المقالات</a></li>
+                    <li><a href="{{ route('posts.index', ['tag' => 'vision-2030']) }}" class="hover:text-white transition-colors">رؤية 2030</a></li>
                     <li><a href="{{ route('posts.index', ['tag' => 'hajj-umrah']) }}" class="hover:text-white transition-colors">الحج والعمرة</a></li>
                 </ul>
             </div>
 
-            {{-- Topics --}}
-            <div class="md:col-span-3">
-                <h3 class="text-sm font-semibold pb-2 mb-3 border-b border-white/20">التصنيفات</h3>
-                <ul class="space-y-2.5 text-sm text-white/75">
+            {{-- Topics (short) --}}
+            <div>
+                <h3 class="text-sm font-semibold pb-1.5 mb-2 border-b border-white/20">التصنيفات</h3>
+                <ul class="space-y-1.5 text-sm text-white/70">
                     <li><a href="{{ route('posts.index', ['tag' => 'history']) }}" class="hover:text-white transition-colors">التاريخ</a></li>
-                    <li><a href="{{ route('posts.index', ['tag' => 'vision-2030']) }}" class="hover:text-white transition-colors">رؤية 2030</a></li>
                     <li><a href="{{ route('posts.index', ['tag' => 'economy']) }}" class="hover:text-white transition-colors">الاقتصاد</a></li>
-                    <li><a href="{{ route('posts.index', ['search' => 'الذكاء الاصطناعي']) }}" class="hover:text-white transition-colors">التقنية والذكاء الاصطناعي</a></li>
                     <li><a href="{{ route('posts.index', ['tag' => 'culture']) }}" class="hover:text-white transition-colors">الثقافة والتراث</a></li>
                     <li><a href="{{ route('posts.index', ['search' => 'السياحة']) }}" class="hover:text-white transition-colors">السياحة والمجتمع</a></li>
-                </ul>
-            </div>
-
-            {{-- About / join --}}
-            <div class="md:col-span-2">
-                <h3 class="text-sm font-semibold pb-2 mb-3 border-b border-white/20">المنصة</h3>
-                <ul class="space-y-2.5 text-sm text-white/75">
-                    @guest
-                        <li><a href="{{ route('register') }}" class="hover:text-white transition-colors">إنشاء حساب</a></li>
-                        <li><a href="{{ route('login') }}" class="hover:text-white transition-colors">تسجيل الدخول</a></li>
-                    @else
-                        <li><a href="{{ route('dashboard') }}" class="hover:text-white transition-colors">الصفحة الشخصية</a></li>
-                        <li><a href="{{ route('posts.create') }}" class="hover:text-white transition-colors">نشر مقال</a></li>
-                    @endguest
                 </ul>
             </div>
         </div>
     </div>
 
     <div class="border-t border-white/15">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p class="text-xs text-white/60 text-center sm:text-start">
                 &copy; {{ date('Y') }} منصة المعرفة السعودية. جميع الحقوق محفوظة.
             </p>
-            <p class="text-xs text-white/50">
-                معرفة موثوقة تواكب رؤية المملكة 2030
-            </p>
+            <p class="text-xs text-white/50">معرفة موثوقة تواكب رؤية المملكة 2030</p>
         </div>
     </div>
 </footer>

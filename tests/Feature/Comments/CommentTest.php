@@ -27,6 +27,38 @@ it('allows an authenticated user to comment on a post', function () {
     Notification::assertSentTo($owner, NewCommentNotification::class);
 });
 
+it('queues an Arabic branded email to the owner with the correct dynamic content', function () {
+    Notification::fake();
+
+    $owner = User::factory()->create(['name' => 'صاحب المقال']);
+    $commenter = User::factory()->create(['name' => 'كاتب التعليق']);
+    $post = Post::factory()->create(['user_id' => $owner->id, 'title' => 'رؤية السعودية 2030']);
+
+    $this->actingAs($commenter, 'sanctum')->postJson("/api/v1/posts/{$post->slug}/comments", [
+        'content' => 'مقال رائع ويستحق القراءة!',
+    ])->assertCreated();
+
+    Notification::assertSentTo($owner, NewCommentNotification::class, function ($notification) use ($owner, $post) {
+        // Queued (async): the email never blocks the request.
+        expect($notification)->toBeInstanceOf(\Illuminate\Contracts\Queue\ShouldQueue::class);
+
+        $mail = $notification->toMail($owner);
+        $data = $mail->viewData;
+
+        expect($mail->subject)->toBe('تعليق جديد على مقالك')
+            ->and($mail->view)->toBe('emails.comment-added')
+            ->and($data['post']->title)->toBe('رؤية السعودية 2030')              // article title
+            ->and($data['commenterName'])->toBe('كاتب التعليق')                   // commenter name
+            ->and($data['comment']->content)->toBe('مقال رائع ويستحق القراءة!')   // comment content
+            ->and($data['url'])->toContain("/posts/{$post->slug}");               // correct URL
+
+        return true;
+    });
+
+    // Only the post owner is notified — never the commenter.
+    Notification::assertNotSentTo($commenter, NewCommentNotification::class);
+});
+
 it('does not notify the owner when they comment on their own post', function () {
     Notification::fake();
 

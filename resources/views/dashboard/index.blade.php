@@ -15,15 +15,9 @@
             ['label' => 'الصفحة الشخصية'],
         ]" />
 
-        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-ink-900">الصفحة الشخصية</h1>
-                <p class="text-sm text-ink-500 mt-1.5">مرحباً {{ $user->name }} — أدر مقالاتك وتعليقاتك على المنصة.</p>
-            </div>
-            <a href="{{ route('posts.create') }}" class="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-brand-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-brand-700 transition-colors">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                مقال جديد
-            </a>
+        <div class="mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-ink-900">الصفحة الشخصية</h1>
+            <p class="text-sm text-ink-500 mt-1.5">مرحباً {{ $user->name }} — أدر مقالاتك وتعليقاتك على المنصة.</p>
         </div>
 
         @include('dashboard._tabs')

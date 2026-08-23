@@ -7,30 +7,96 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Str;
 
+/**
+ * Sent to a post's author when someone else comments on their post.
+ *
+ * Two channels, one notification (so there is never a duplicate):
+ *   - mail     → an Arabic, RTL, branded email (delivered asynchronously)
+ *   - database → an in-site record shown in the notification bell (read_at aware)
+ *
+ * Implements ShouldQueue so BOTH channels are handled by the queue worker —
+ * adding a comment returns immediately and never waits on (or fails because of)
+ * SMTP. On a mail failure the job is retried ($tries) and, once the attempts are
+ * exhausted, recorded in the `failed_jobs` table.
+ */
 class NewCommentNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    /** Retry the queued notification a few times before it lands in failed_jobs. */
+    public int $tries = 3;
+
+    /** Seconds to wait between retries. */
+    public int $backoff = 30;
 
     public function __construct(private readonly Comment $comment)
     {
     }
 
+    /**
+     * Delivery channels: in-site bell (database) + email (mail).
+     *
+     * Guard against orphaned data: if the comment or its post no longer exists
+     * by the time the queued job runs (e.g. the post was deleted), deliver
+     * nothing instead of throwing — the job completes cleanly rather than
+     * piling up in failed_jobs.
+     */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        if (! $this->comment || ! $this->comment->post) {
+            return [];
+        }
+
+        return ['database', 'mail'];
     }
 
+    /**
+     * Deep-link straight to the comment on the post page (where the owner reads
+     * comments). Uses the existing named route + slug binding, not a hand-built path.
+     */
+    private function commentUrl(): string
+    {
+        return route('posts.show', $this->comment->post).'#comment-'.$this->comment->id;
+    }
+
+    /**
+     * Payload stored for the `database` channel and rendered by the bell/index.
+     * All values are dynamic.
+     */
+    public function toArray(object $notifiable): array
+    {
+        $post = $this->comment->post;
+
+        return [
+            'comment_id' => $this->comment->id,
+            'post_id' => $post->id,
+            'post_slug' => $post->slug,
+            'post_title' => $post->title,
+            'commenter_name' => $this->comment->user?->name ?? 'مستخدم',
+            'excerpt' => Str::limit($this->comment->content, 140),
+            'url' => $this->commentUrl(),
+        ];
+    }
+
+    /**
+     * Build the Arabic, RTL, branded email. Rendered by a dedicated Blade view
+     * so tests can assert on the view data.
+     */
     public function toMail(object $notifiable): MailMessage
     {
         $post = $this->comment->post;
 
         return (new MailMessage)
-            ->subject("New comment on \"{$post->title}\"")
-            ->greeting("Hi {$notifiable->name},")
-            ->line("{$this->comment->user->name} commented on your post \"{$post->title}\".")
-            ->line($this->comment->content)
-            ->action('View Post', url("/posts/{$post->slug}"))
-            ->line('Thank you for using our platform!');
+            ->subject('تعليق جديد على مقالك')
+            ->view('emails.comment-added', [
+                'ownerName' => $notifiable->name,
+                'post' => $post,
+                'comment' => $this->comment,
+                'commenterName' => $this->comment->user?->name ?? 'مستخدم',
+                'commentExcerpt' => Str::limit($this->comment->content, 400),
+                'url' => $this->commentUrl(),
+            ]);
     }
 }

@@ -85,7 +85,7 @@
 
             <div class="space-y-5">
                 @forelse ($post->comments as $comment)
-                    <div class="flex gap-3">
+                    <div id="comment-{{ $comment->id }}" class="flex gap-3 scroll-mt-24">
                         <x-avatar :name="$comment->user->name" :size="36" />
                         <div class="flex-1 min-w-0 rounded-xl bg-ink-50 px-4 py-3">
                             <div class="flex items-center justify-between gap-3 mb-1">
