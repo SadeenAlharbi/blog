@@ -32,13 +32,15 @@ it('shows a single post with author, tags and comments', function () {
 it('allows an authenticated user to create a post', function () {
     Storage::fake('public');
     $user = User::factory()->create();
-    $tag = Tag::factory()->create(['name' => 'Vision 2030']);
 
+    // Categories are a fixed central list (Tag::categories()); a post is tagged
+    // with canonical slugs. Free-text values are ignored by design, so this
+    // sends two real categories rather than inventing one.
     $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/posts', [
         'title' => 'Saudi Vision 2030 Milestones',
         'content' => 'A detailed look at the Kingdom\'s transformation.',
         'image' => UploadedFile::fake()->image('post.jpg'),
-        'tags' => [$tag->name, 'New Tag'],
+        'tags' => ['vision-2030', 'economy'],
     ]);
 
     $response->assertCreated()

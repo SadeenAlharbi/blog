@@ -13,6 +13,10 @@ class UserResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'email' => $this->email,
+            // Additive: lets an API client render admin-only affordances. The
+            // server still enforces every permission regardless of this value.
+            'role' => $this->role,
+            'is_admin' => $this->isAdmin(),
             'created_at' => $this->created_at,
         ];
     }

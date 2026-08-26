@@ -33,7 +33,8 @@ it('lets an authenticated user view their dashboard', function () {
     $user = User::factory()->create();
     Post::factory(2)->create(['user_id' => $user->id]);
 
-    $this->actingAs($user)->get('/dashboard')->assertOk()->assertSee('لوحة التحكم');
+    // The personal area was renamed from «لوحة التحكم» to «الصفحة الشخصية».
+    $this->actingAs($user)->get('/dashboard')->assertOk()->assertSee('الصفحة الشخصية');
 });
 
 it('lets a user create a post through the web form', function () {

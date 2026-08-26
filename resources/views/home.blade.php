@@ -34,7 +34,8 @@
 
     $postsTotal = \App\Models\Post::count();
     $writersTotal = \App\Models\User::count();
-    $categoriesTotal = count(\App\Models\Tag::categories());
+    // Live category count — includes anything an administrator added.
+    $categoriesTotal = count(\App\Models\Tag::options());
 @endphp
 
 @section('content')

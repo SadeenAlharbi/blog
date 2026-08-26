@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -36,7 +37,26 @@ class PostFactory extends Factory
             'slug' => Str::slug($title),
             'content' => implode("\n\n", fake()->paragraphs(6)),
             'image' => null,
+            // Published by default so existing behaviour and tests are unchanged.
+            'status' => Post::STATUS_PUBLISHED,
             'published_at' => fake()->dateTimeBetween('-1 year', 'now'),
         ];
+    }
+
+    /** A saved-but-unpublished article. */
+    public function draft(): static
+    {
+        return $this->state(fn () => [
+            'status' => Post::STATUS_DRAFT,
+        ]);
+    }
+
+    /** An article queued for a future moment. */
+    public function scheduled(): static
+    {
+        return $this->state(fn () => [
+            'status' => Post::STATUS_SCHEDULED,
+            'published_at' => now()->addDays(3),
+        ]);
     }
 }

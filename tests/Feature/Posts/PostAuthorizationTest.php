@@ -21,7 +21,16 @@ it('allows the owner to delete their post', function () {
     $response = $this->actingAs($owner, 'sanctum')->deleteJson("/api/v1/posts/{$post->slug}");
 
     $response->assertOk();
-    $this->assertDatabaseMissing('posts', ['id' => $post->id]);
+
+    /*
+     * Deleting an article is now a SOFT delete, so the row deliberately stays
+     * behind: that is what lets a reader who was on the page get an
+     * explanation instead of a bare 404, and what makes admin restore
+     * possible. The article must still be gone from every read path.
+     */
+    $this->assertSoftDeleted('posts', ['id' => $post->id]);
+    expect(Post::find($post->id))->toBeNull();
+    $this->getJson('/api/v1/posts')->assertJsonMissing(['id' => $post->id]);
 });
 
 it('forbids another user from updating a post they do not own', function () {

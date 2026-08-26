@@ -16,10 +16,16 @@ class PostResource extends JsonResource
             'slug' => $this->slug,
             'content' => $this->content,
             'image_url' => $this->image ? Storage::disk('public')->url($this->image) : null,
+            // Added alongside the existing fields — nothing was removed, so
+            // existing API consumers keep working unchanged.
+            'status' => $this->status,
+            'status_label' => $this->statusLabel(),
+            'is_published' => $this->isPublished(),
             'published_at' => $this->published_at,
             'author' => new UserResource($this->whenLoaded('user')),
             'tags' => TagResource::collection($this->whenLoaded('tags')),
             'comments_count' => $this->whenCounted('comments'),
+            'views_count' => $this->whenCounted('views'),
             'comments' => CommentResource::collection($this->whenLoaded('comments')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Resources\CommentResource;
+use App\Models\Comment;
 use App\Models\Post;
 use App\Notifications\NewCommentNotification;
 
@@ -13,6 +14,7 @@ class CommentController extends Controller
     public function index(Post $post)
     {
         $comments = $post->comments()
+            ->approved()
             ->with('user')
             ->latest()
             ->paginate(15);
@@ -37,5 +39,22 @@ class CommentController extends Controller
             'data' => new CommentResource($comment),
             'message' => 'Comment added successfully.',
         ], 201);
+    }
+
+    /**
+     * Delete a comment. Mirrors the web behaviour exactly: the comment's own
+     * author may delete it, and so may an administrator — enforced by
+     * CommentPolicy, so the API cannot be used to bypass the web rules.
+     */
+    public function destroy(Comment $comment)
+    {
+        $this->authorize('delete', $comment);
+
+        $comment->delete();
+
+        return response()->json([
+            'data' => null,
+            'message' => 'Comment deleted successfully.',
+        ]);
     }
 }

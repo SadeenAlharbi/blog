@@ -36,6 +36,22 @@ class NewCommentNotification extends Notification implements ShouldQueue
     }
 
     /**
+     * Deliver the in-site record IMMEDIATELY, and only e-mail through the queue.
+     *
+     * This project runs QUEUE_CONNECTION=database. With the whole notification
+     * queued, every bell record sat unprocessed in the `jobs` table until
+     * someone ran `php artisan queue:work` — which is why notifications
+     * appeared not to work at all. Pinning the `database` channel to the `sync`
+     * connection writes the record during the request, so the bell is correct
+     * whether or not a worker is running, while mail stays asynchronous and
+     * never blocks the response.
+     */
+    public function viaConnections(): array
+    {
+        return ['database' => 'sync'];
+    }
+
+    /**
      * Delivery channels: in-site bell (database) + email (mail).
      *
      * Guard against orphaned data: if the comment or its post no longer exists
@@ -70,6 +86,10 @@ class NewCommentNotification extends Notification implements ShouldQueue
         $post = $this->comment->post;
 
         return [
+            // Explicit type/action so the UI can tell this apart from an
+            // article notice instead of guessing from the payload's shape.
+            'type' => 'comment',
+            'action' => 'comment_created',
             'comment_id' => $this->comment->id,
             'post_id' => $post->id,
             'post_slug' => $post->slug,

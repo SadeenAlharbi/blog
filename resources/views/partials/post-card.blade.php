@@ -32,9 +32,13 @@
 
         <p class="text-sm text-ink-500 leading-relaxed mb-4 line-clamp-3">{{ $excerpt }}</p>
 
+        {{-- Moderator-published articles carry no personal byline
+             (see Post::showsAuthor()); the date still shows. --}}
         <div class="mt-auto flex items-center gap-2.5 pt-3 border-t border-ink-50">
-            <x-avatar :name="$post->user->name" :size="28" />
-            <span class="text-xs font-medium text-ink-600 truncate">{{ $post->user->name }}</span>
+            @if ($post->showsAuthor())
+                <x-avatar :name="$post->user->name" :size="28" />
+                <span class="text-xs font-medium text-ink-600 truncate">{{ $post->user->name }}</span>
+            @endif
             <span class="text-xs text-ink-300 ms-auto shrink-0">{{ optional($post->published_at)->format('Y/m/d') }}</span>
         </div>
     </div>

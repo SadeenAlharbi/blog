@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Post;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePostRequest extends FormRequest
 {
@@ -15,8 +17,10 @@ class StorePostRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
+            'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', 'unique:posts,slug'],
             'content' => ['required', 'string'],
             'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'status' => ['nullable', 'string', Rule::in(array_keys(Post::statuses()))],
             'published_at' => ['nullable', 'date'],
             // Categories are optional. Values are category slugs from the fixed list.
             'tags' => ['nullable', 'array'],
@@ -29,10 +33,13 @@ class StorePostRequest extends FormRequest
         return [
             'title.required' => 'عنوان المقال مطلوب.',
             'title.max' => 'عنوان المقال طويل جداً (بحد أقصى 255 حرفاً).',
+            'slug.alpha_dash' => 'الرابط المختصر يجب أن يحتوي على حروف وأرقام وشرطات فقط.',
+            'slug.unique' => 'هذا الرابط المختصر مستخدم في مقال آخر.',
             'content.required' => 'محتوى المقال مطلوب.',
             'image.image' => 'الملف المرفوع يجب أن يكون صورة.',
             'image.mimes' => 'صيغة الصورة يجب أن تكون JPEG أو PNG أو WEBP.',
             'image.max' => 'حجم الصورة يجب ألا يتجاوز 5 ميجابايت.',
+            'status.in' => 'حالة النشر غير صالحة.',
             'published_at.date' => 'تاريخ النشر غير صالح.',
             'tags.array' => 'صيغة التصنيفات غير صحيحة.',
             'tags.*.string' => 'أحد التصنيفات غير صالح.',
@@ -66,6 +73,13 @@ class StorePostRequest extends FormRequest
             ->values()
             ->all();
 
-        $this->merge(['tags' => $tags]);
+        $merge = ['tags' => $tags];
+
+        // An empty slug field must not trip `alpha_dash` / `unique`.
+        if ($this->has('slug') && blank($this->input('slug'))) {
+            $merge['slug'] = null;
+        }
+
+        $this->merge($merge);
     }
 }

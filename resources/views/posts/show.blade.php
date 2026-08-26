@@ -31,12 +31,20 @@
 
             <h1 class="text-3xl sm:text-4xl font-extrabold text-ink-900 leading-tight tracking-tight">{{ $post->title }}</h1>
 
+            {{-- Moderator-published articles carry no personal byline
+                 (see Post::showsAuthor()); the publish date still shows. --}}
             <div class="flex items-center gap-3 mt-5 pb-6 border-b border-ink-100">
-                <x-avatar :name="$post->user->name" :size="40" />
-                <div class="min-w-0">
-                    <p class="text-sm font-semibold text-ink-800">{{ $post->user->name }}</p>
-                    <p class="text-xs text-ink-400">{{ optional($post->published_at)->format('Y/m/d') }}</p>
-                </div>
+                @if ($post->showsAuthor())
+                    <x-avatar :name="$post->user->name" :size="40" />
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-ink-800">{{ $post->user->name }}</p>
+                        <p class="text-xs text-ink-400">{{ optional($post->published_at)->format('Y/m/d') }}</p>
+                    </div>
+                @else
+                    <div class="min-w-0">
+                        <p class="text-xs text-ink-400">{{ optional($post->published_at)->format('Y/m/d') }}</p>
+                    </div>
+                @endif
 
                 @auth
                     @can('update', $post)
@@ -65,7 +73,7 @@
             <h2 class="text-lg font-bold text-ink-900 mb-6">التعليقات ({{ $post->comments->count() }})</h2>
 
             @auth
-                <form method="POST" action="{{ route('comments.store', $post) }}" class="mb-8">
+                <form method="POST" action="{{ route('comments.store', $post) }}" class="mb-8" data-comment-form>
                     @csrf
                     <label for="content" class="sr-only">أضف تعليقاً</label>
                     <textarea id="content" name="content" rows="3"
@@ -123,4 +131,69 @@
             </div>
         </section>
     @endif
+
+    {{--
+        Liveness poll.
+
+        If a moderator removes this article — or one of its comments — while
+        somebody is reading it, the page says so in place rather than the reader
+        finding out through a broken refresh. Plain fetch plus the shared toast
+        helper: no new dependency, and it pauses while the tab is hidden.
+    --}}
+    <script>
+        (function () {
+            var url = @json(route('posts.availability', $post->slug));
+            var INTERVAL = 25000;
+            var timer = null;
+
+            function stop() { if (timer) { clearInterval(timer); timer = null; } }
+
+            function markArticleRemoved() {
+                stop();
+                if (window.pushToast) {
+                    window.pushToast('تم حذف هذا المقال من قبل إدارة المنصة.', 'warning');
+                }
+                document.querySelectorAll('[data-comment-form]').forEach(function (form) {
+                    form.querySelectorAll('textarea, button').forEach(function (c) { c.disabled = true; });
+                });
+            }
+
+            function removeComment(id) {
+                var el = document.getElementById('comment-' + id);
+                if (!el) return;
+                el.style.transition = 'opacity .3s';
+                el.style.opacity = '0';
+                setTimeout(function () { el.remove(); }, 300);
+                if (window.pushToast) {
+                    window.pushToast('تم حذف هذا التعليق من قبل إدارة المنصة.', 'warning');
+                }
+            }
+
+            function check() {
+                fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (data) {
+                        if (!data) return;
+
+                        if (!data.available) { markArticleRemoved(); return; }
+
+                        var live = {};
+                        (data.comments || []).forEach(function (id) { live[String(id)] = true; });
+
+                        document.querySelectorAll('[id^="comment-"]').forEach(function (el) {
+                            var id = el.id.replace('comment-', '');
+                            if (id && !live[id]) removeComment(id);
+                        });
+                    })
+                    .catch(function () { /* transient network issue — retry next tick */ });
+            }
+
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) { stop(); }
+                else if (!timer) { check(); timer = setInterval(check, INTERVAL); }
+            });
+
+            timer = setInterval(check, INTERVAL);
+        })();
+    </script>
 @endsection

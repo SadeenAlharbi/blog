@@ -35,4 +35,21 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | REST API client key
+    |--------------------------------------------------------------------------
+    |
+    | Identifies the client APPLICATION calling /api/* via the X-API-KEY header.
+    | This is separate from Sanctum, which identifies the USER. Read through
+    | config (never env() at call time) so `php artisan config:cache` works.
+    |
+    | Set API_KEY in .env to switch the layer on; while it is empty the
+    | middleware steps aside so an existing installation keeps working.
+    |
+    */
+    'api' => [
+        'key' => env('API_KEY'),
+    ],
+
 ];

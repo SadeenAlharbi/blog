@@ -64,7 +64,9 @@
     <div>
         <span class="block text-sm font-medium text-ink-700 mb-2">التصنيفات <span class="text-ink-400 font-normal">(اختر من القائمة — اختياري)</span></span>
         @php
-            $categoryOptions = \App\Models\Tag::categories();
+            // Live list from the database, so a category an administrator adds
+            // becomes available to writers immediately.
+            $categoryOptions = \App\Models\Tag::options();
             $selectedTags = old('tags', isset($post) ? $post->tags->pluck('slug')->all() : []);
             // Preserve any legacy tags already on this post that aren't in the
             // canonical list, so editing an old article never silently drops them.
@@ -95,12 +97,38 @@
     </div>
 </div>
 
-<div class="flex items-center gap-3 mt-6">
-    <button type="submit" class="inline-flex items-center rounded-xl bg-brand-600 text-white px-6 py-2.5 text-sm font-semibold hover:bg-brand-700 transition-colors">
-        {{ isset($post) ? 'حفظ التعديلات' : 'نشر المقال' }}
+@php
+    // An article already public keeps its state when saved; a new one, or one
+    // still sitting in drafts, offers both choices.
+    $isPublished = isset($post) && $post->isPublished();
+@endphp
+
+{{--
+    Two submit buttons on ONE form, each carrying the status it means. The
+    status travels as a normal field, so PostService decides the stored state
+    exactly as it does for the API — no parallel publishing path.
+--}}
+<div class="flex flex-wrap items-center gap-3 mt-6">
+    <button type="submit" name="status" value="{{ \App\Models\Post::STATUS_PUBLISHED }}"
+            class="inline-flex items-center rounded-xl bg-brand-600 text-white px-6 py-2.5 text-sm font-semibold hover:bg-brand-700 transition-colors">
+        {{ $isPublished ? 'حفظ التعديلات' : 'نشر المقال' }}
     </button>
+
+    @unless ($isPublished)
+        <button type="submit" name="status" value="{{ \App\Models\Post::STATUS_DRAFT }}"
+                class="inline-flex items-center rounded-xl border border-ink-200 bg-white px-6 py-2.5 text-sm font-semibold text-ink-700 hover:border-brand-300 hover:text-brand-700 transition-colors">
+            حفظ كمسودة
+        </button>
+    @endunless
+
     <a href="{{ isset($post) ? route('posts.show', $post) : route('dashboard') }}" class="text-sm text-ink-500 hover:text-ink-700">إلغاء</a>
 </div>
+
+@unless ($isPublished)
+    <p class="text-xs text-ink-400 mt-2.5">
+        المسودة تُحفظ في صفحتك الشخصية ولا تظهر للقرّاء، ويمكنك نشرها في أي وقت.
+    </p>
+@endunless
 
 <script>
     // Block oversize images in the browser so the upload never hits PHP's

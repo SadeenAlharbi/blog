@@ -28,6 +28,12 @@
             <a href="{{ route('posts.index') }}" class="hover:text-brand-600 transition-colors {{ request()->routeIs('posts.*') ? 'text-brand-600' : '' }}">المقالات</a>
             @auth
                 <a href="{{ route('dashboard') }}" class="hover:text-brand-600 transition-colors {{ request()->routeIs('dashboard*') ? 'text-brand-600' : '' }}">الصفحة الشخصية</a>
+                @can('access-admin')
+                    <a href="{{ route('admin.dashboard') }}" class="inline-flex items-center gap-1.5 text-brand-700 font-semibold hover:text-brand-800 transition-colors">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg>
+                        لوحة الإدارة
+                    </a>
+                @endcan
             @endauth
         </div>
 
@@ -69,32 +75,7 @@
 
                         <div class="max-h-96 overflow-y-auto divide-y divide-ink-50">
                             @forelse ($navRecent as $note)
-                                @php $d = $note->data; $unread = is_null($note->read_at); @endphp
-                                <form method="POST" action="{{ route('notifications.read', $note->id) }}">
-                                    @csrf
-                                    <button type="submit"
-                                            class="w-full text-start px-4 py-3 flex gap-3 transition-colors hover:bg-ink-50 {{ $unread ? 'bg-brand-50/60' : '' }}">
-                                        <span class="mt-1 shrink-0">
-                                            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-600">
-                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
-                                            </span>
-                                        </span>
-                                        <span class="min-w-0 flex-1">
-                                            <span class="block text-xs text-ink-700 leading-relaxed">
-                                                <span class="font-semibold text-ink-900">{{ $d['commenter_name'] ?? 'مستخدم' }}</span>
-                                                علّق على مقالك
-                                                <span class="font-semibold text-brand-700">«{{ \Illuminate\Support\Str::limit($d['post_title'] ?? '', 40) }}»</span>
-                                            </span>
-                                            @if (!empty($d['excerpt']))
-                                                <span class="block text-xs text-ink-400 mt-0.5 line-clamp-1">{{ $d['excerpt'] }}</span>
-                                            @endif
-                                            <span class="block text-[11px] text-ink-300 mt-1">{{ $note->created_at->diffForHumans() }}</span>
-                                        </span>
-                                        @if ($unread)
-                                            <span class="mt-1 shrink-0 h-2 w-2 rounded-full bg-brand-500" aria-label="غير مقروء"></span>
-                                        @endif
-                                    </button>
-                                </form>
+                                <x-notification-item :note="$note" :action="route('notifications.read', $note->id)" size="sm" />
                             @empty
                                 <div class="px-4 py-10 text-center">
                                     <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-ink-50 text-ink-300">
@@ -112,10 +93,12 @@
                     </div>
                 </div>
 
-                <span class="hidden lg:inline text-sm text-ink-500">مرحباً، {{ auth()->user()->name }}</span>
+                <span class="hidden lg:inline text-sm text-ink-500">حياك الله، {{ auth()->user()->name }}</span>
+                {{-- Same button style as "إنشاء حساب" — identical colour, radius,
+                     padding, weight, hover and transition. Only the label differs. --}}
                 <form method="POST" action="{{ route('logout') }}" class="hidden sm:block">
                     @csrf
-                    <button type="submit" class="text-sm font-medium text-ink-600 hover:text-red-600 transition-colors">تسجيل الخروج</button>
+                    <button type="submit" class="inline-flex items-center rounded-lg bg-brand-600 text-white px-4 py-2 text-sm font-semibold hover:bg-brand-700 transition-colors">تسجيل خروج</button>
                 </form>
             @else
                 <a href="{{ route('login') }}" class="hidden sm:inline text-sm font-medium text-ink-600 hover:text-brand-600 transition-colors">تسجيل الدخول</a>
@@ -145,6 +128,9 @@
         <a href="{{ route('posts.index') }}" class="block rounded-lg px-3 py-2 hover:bg-ink-50 hover:text-brand-600 transition-colors {{ request()->routeIs('posts.*') ? 'text-brand-600' : '' }}">المقالات</a>
         @auth
             <a href="{{ route('dashboard') }}" class="block rounded-lg px-3 py-2 hover:bg-ink-50 hover:text-brand-600 transition-colors {{ request()->routeIs('dashboard*') ? 'text-brand-600' : '' }}">الصفحة الشخصية</a>
+            @can('access-admin')
+                <a href="{{ route('admin.dashboard') }}" class="block rounded-lg px-3 py-2 font-semibold text-brand-700 hover:bg-brand-50 transition-colors">لوحة الإدارة</a>
+            @endcan
             <a href="{{ route('notifications.index') }}" class="flex items-center justify-between rounded-lg px-3 py-2 hover:bg-ink-50 hover:text-brand-600 transition-colors {{ request()->routeIs('notifications.*') ? 'text-brand-600' : '' }}">
                 <span>الإشعارات</span>
                 @if ($navUnreadCount > 0)
@@ -152,10 +138,10 @@
                 @endif
             </a>
             <div class="my-2 border-t border-ink-100"></div>
-            <span class="block px-3 py-1 text-xs text-ink-400">مرحباً، {{ auth()->user()->name }}</span>
+            <span class="block px-3 py-1 text-xs text-ink-400">حياك الله، {{ auth()->user()->name }}</span>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="w-full text-start rounded-lg px-3 py-2 hover:bg-ink-50 hover:text-red-600 transition-colors">تسجيل الخروج</button>
+                <button type="submit" class="block w-full rounded-lg bg-brand-600 text-white text-center px-3 py-2 font-semibold hover:bg-brand-700 transition-colors">تسجيل خروج</button>
             </form>
         @else
             <div class="my-2 border-t border-ink-100"></div>

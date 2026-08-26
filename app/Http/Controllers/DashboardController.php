@@ -10,7 +10,7 @@ class DashboardController extends Controller
     {
         $posts = $request->user()
             ->posts()
-            ->withCount(['comments', 'tags'])
+            ->withCount(['comments', 'tags', 'views'])
             ->latest()
             ->paginate(10);
 

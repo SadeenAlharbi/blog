@@ -25,7 +25,8 @@ class CommentController extends Controller
 
     public function destroy(Comment $comment)
     {
-        // Server-side ownership check — a user can only delete their own comment.
+        // Server-side ownership check — a user can only delete their own
+        // comment; an administrator may delete any (see CommentPolicy).
         $this->authorize('delete', $comment);
 
         $comment->delete();

@@ -35,5 +35,7 @@
         </main>
 
         @include('partials.footer')
+
+        @include('partials.toasts')
     </body>
 </html>

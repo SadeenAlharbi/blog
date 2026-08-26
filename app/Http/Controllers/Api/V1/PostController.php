@@ -8,19 +8,24 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use App\Services\PostService;
+use App\Services\PostViewService;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    public function __construct(private readonly PostService $posts)
-    {
+    public function __construct(
+        private readonly PostService $posts,
+        private readonly PostViewService $views,
+    ) {
     }
 
     public function index(Request $request)
     {
+        // Public listing: published articles only.
         $query = Post::query()
+            ->published()
             ->with(['user', 'tags'])
-            ->withCount('comments');
+            ->withCount(['comments', 'views']);
 
         if ($search = $request->string('search')->trim()->value()) {
             $query->where(function ($q) use ($search) {
@@ -42,6 +47,7 @@ class PostController extends Controller
         match ($sort) {
             'oldest' => $query->oldest('published_at'),
             'title' => $query->orderBy('title'),
+            'views' => $query->orderByDesc('views_count'),
             default => $query->latest('published_at'),
         };
 
@@ -66,9 +72,21 @@ class PostController extends Controller
         ], 201);
     }
 
-    public function show(Post $post)
+    public function show(Request $request, Post $post)
     {
-        $post->load(['user', 'tags', 'comments.user']);
+        // Unpublished articles are readable only by their author or an admin.
+        if (! $post->isPublished()) {
+            $user = $request->user();
+
+            if (! $user || (! $user->isAdmin() && $user->id !== $post->user_id)) {
+                abort(404);
+            }
+        }
+
+        $this->views->record($post, $request);
+
+        $post->load(['user', 'tags', 'comments' => fn ($q) => $q->approved()->with('user')]);
+        $post->loadCount('views');
 
         return response()->json([
             'data' => new PostResource($post),

@@ -11,42 +11,81 @@ it('lists tags with post counts', function () {
     $response->assertOk()->assertJsonCount(3, 'data');
 });
 
-it('allows an authenticated user to create a tag', function () {
+/*
+|--------------------------------------------------------------------------
+| Central category list
+|--------------------------------------------------------------------------
+| Categories are a FIXED list defined in Tag::categories(). The API used to
+| accept any free-text name, which let it create categories the web UI could
+| never produce — one source of truth was the whole point of that list. The
+| tests below assert the corrected behaviour.
+*/
+
+it('materialises a canonical category', function () {
     $user = User::factory()->create();
 
+    $slug = 'economy';
+    $name = Tag::categories()[$slug];
+
     $response = $this->actingAs($user, 'sanctum')->postJson('/api/v1/tags', [
-        'name' => 'Renewable Energy',
+        'name' => $name,
     ]);
 
-    $response->assertCreated()->assertJsonPath('data.name', 'Renewable Energy');
-    $this->assertDatabaseHas('tags', ['name' => 'Renewable Energy', 'slug' => 'renewable-energy']);
+    $response->assertCreated()->assertJsonPath('data.name', $name);
+    $this->assertDatabaseHas('tags', ['name' => $name, 'slug' => $slug]);
+});
+
+it('accepts a canonical category by its slug too', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/v1/tags', ['name' => 'heritage'])
+        ->assertCreated();
+
+    $this->assertDatabaseHas('tags', ['slug' => 'heritage']);
+});
+
+it('rejects a free-text category outside the central list', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/v1/tags', ['name' => 'Renewable Energy'])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors('name');
+
+    $this->assertDatabaseMissing('tags', ['name' => 'Renewable Energy']);
 });
 
 it('rejects tag creation without authentication', function () {
     $this->postJson('/api/v1/tags', ['name' => 'Unauthorized Tag'])->assertStatus(401);
 });
 
-it('rejects duplicate tag names', function () {
+it('is idempotent for a category that already exists', function () {
     $user = User::factory()->create();
-    Tag::factory()->create(['name' => 'Culture']);
+    $name = Tag::categories()['culture'];
 
-    $this->actingAs($user, 'sanctum')
-        ->postJson('/api/v1/tags', ['name' => 'Culture'])
-        ->assertStatus(422)
-        ->assertJsonValidationErrors('name');
+    $this->actingAs($user, 'sanctum')->postJson('/api/v1/tags', ['name' => $name])->assertCreated();
+
+    // Asking again returns the existing row rather than creating a duplicate.
+    $this->actingAs($user, 'sanctum')->postJson('/api/v1/tags', ['name' => $name])->assertOk();
+
+    $this->assertDatabaseCount('tags', 1);
 });
 
 it('rate limits tag creation to 10 per minute per user', function () {
     $user = User::factory()->create();
 
-    for ($i = 0; $i < 10; $i++) {
+    // Ten DISTINCT canonical categories, so each call really creates one.
+    $slugs = array_slice(array_keys(Tag::categories()), 0, 10);
+
+    foreach ($slugs as $slug) {
         $this->actingAs($user, 'sanctum')
-            ->postJson('/api/v1/tags', ['name' => "Tag {$i}"])
+            ->postJson('/api/v1/tags', ['name' => $slug])
             ->assertCreated();
     }
 
     $this->actingAs($user, 'sanctum')
-        ->postJson('/api/v1/tags', ['name' => 'One too many'])
+        ->postJson('/api/v1/tags', ['name' => 'facts'])
         ->assertStatus(429);
 
     $this->assertDatabaseCount('tags', 10);
