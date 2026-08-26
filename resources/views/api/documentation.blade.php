@@ -29,7 +29,7 @@
         <img src="{{ asset('images/logo.png') }}" alt="">
         <div>
             <h1>Saudi Knowledge Platform — REST API v1</h1>
-            <p>Authorize with an API key (X-API-KEY) and a Sanctum bearer token.</p>
+            <p>Press <strong>Authorize</strong> and paste a Sanctum token from <code>/auth/login</code>.</p>
         </div>
         <a href="{{ route('home') }}">← العودة إلى الموقع</a>
     </div>

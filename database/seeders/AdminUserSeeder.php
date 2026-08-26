@@ -62,6 +62,9 @@ class AdminUserSeeder extends Seeder
         $user->role = User::ROLE_ADMIN;
         $user->is_active = true;
         $user->is_super_admin = true;
+        // Provisioned by the platform owner from .env, not by self-registration:
+        // there is nobody to open a verification link, so it is verified here.
+        $user->email_verified_at = now();
         $user->save();
 
         $this->command?->info("AdminUserSeeder: تم إنشاء حساب مشرف ({$email}).");

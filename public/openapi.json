@@ -3,7 +3,7 @@
   "info": {
     "title": "Saudi Knowledge Platform API",
     "version": "1.0.0",
-    "description": "REST API for منصة المعرفة السعودية.\n\n**Two independent layers guard this API:**\n\n1. `X-API-KEY` — identifies the *client application*. Configure `API_KEY` in `.env`; while it is unset the check steps aside so an existing installation keeps working.\n2. `Authorization: Bearer <token>` — identifies the *user* (Laravel Sanctum).\n\nAuthorization (who may edit what) is enforced by Policies, so the API and the web app can never disagree. A disabled account receives `403` and its tokens are revoked."
+    "description": "REST API for منصة المعرفة السعودية.\n\n**Authentication — Laravel Sanctum bearer tokens.**\n\n`POST /auth/register` and `POST /auth/login` return a personal access token. Send it on every protected call as:\n\n```\nAuthorization: Bearer <token>\n```\n\nIn Swagger UI press **Authorize**, paste the token, and the header is attached to each request you try. `POST /auth/logout` deletes the token server-side, so the same value stops working immediately.\n\nEndpoints marked without a padlock are public and need no token.\n\n**Authorization** (who may edit what) is enforced by Policies, so the API and the web app can never disagree. Publishing an article or writing a comment additionally needs a verified email address (`403` otherwise). A disabled account receives `403` and its tokens are revoked."
   },
   "servers": [
     {
@@ -40,12 +40,6 @@
         "scheme": "bearer",
         "bearerFormat": "Sanctum",
         "description": "A Sanctum personal access token returned by login or register."
-      },
-      "apiKeyAuth": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-API-KEY",
-        "description": "Client application key. Never commit a real key; set API_KEY in .env."
       }
     },
     "schemas": {
@@ -221,11 +215,7 @@
     },
     "responses": {}
   },
-  "security": [
-    {
-      "apiKeyAuth": []
-    }
-  ],
+  "security": [],
   "paths": {
     "/auth/register": {
       "post": {
@@ -233,11 +223,7 @@
           "Auth"
         ],
         "summary": "Create an account and receive a token",
-        "security": [
-          {
-            "apiKeyAuth": []
-          }
-        ],
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -302,7 +288,7 @@
             }
           },
           "401": {
-            "description": "Missing or invalid X-API-KEY"
+            "description": "Unauthenticated — missing or invalid bearer token"
           },
           "422": {
             "description": "Validation failed",
@@ -341,11 +327,7 @@
         ],
         "summary": "Exchange credentials for a token",
         "description": "A disabled account receives 403 and any tokens it holds are revoked.",
-        "security": [
-          {
-            "apiKeyAuth": []
-          }
-        ],
+        "security": [],
         "requestBody": {
           "required": true,
           "content": {
@@ -399,7 +381,7 @@
             }
           },
           "401": {
-            "description": "Missing or invalid X-API-KEY"
+            "description": "Unauthenticated — missing or invalid bearer token"
           },
           "403": {
             "description": "Account disabled by the platform administrators"
@@ -442,9 +424,6 @@
         "summary": "Revoke the current token",
         "security": [
           {
-            "apiKeyAuth": []
-          },
-          {
             "sanctumAuth": []
           }
         ],
@@ -456,7 +435,7 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "description": "Account disabled"
+            "description": "Account disabled, not the owner, or email not verified"
           }
         }
       }
@@ -468,9 +447,6 @@
         ],
         "summary": "The authenticated user",
         "security": [
-          {
-            "apiKeyAuth": []
-          },
           {
             "sanctumAuth": []
           }
@@ -499,7 +475,7 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "description": "Account disabled"
+            "description": "Account disabled, not the owner, or email not verified"
           }
         }
       }
@@ -510,11 +486,7 @@
           "Posts"
         ],
         "summary": "List published articles",
-        "security": [
-          {
-            "apiKeyAuth": []
-          }
-        ],
+        "security": [],
         "parameters": [
           {
             "name": "search",
@@ -588,7 +560,7 @@
             }
           },
           "401": {
-            "description": "Missing or invalid X-API-KEY"
+            "description": "Unauthenticated — missing or invalid bearer token"
           }
         }
       },
@@ -598,9 +570,6 @@
         ],
         "summary": "Create an article",
         "security": [
-          {
-            "apiKeyAuth": []
-          },
           {
             "sanctumAuth": []
           }
@@ -681,7 +650,7 @@
             "description": "Unauthenticated"
           },
           "403": {
-            "description": "Account disabled"
+            "description": "Account disabled, not the owner, or email not verified"
           },
           "422": {
             "description": "Validation failed",
@@ -730,11 +699,7 @@
         ],
         "summary": "Fetch one article",
         "description": "Drafts and scheduled articles are visible only to their author or an administrator.",
-        "security": [
-          {
-            "apiKeyAuth": []
-          }
-        ],
+        "security": [],
         "responses": {
           "200": {
             "description": "The article",
@@ -769,9 +734,6 @@
         ],
         "summary": "Update an article (owner or admin)",
         "security": [
-          {
-            "apiKeyAuth": []
-          },
           {
             "sanctumAuth": []
           }
@@ -835,9 +797,6 @@
         "summary": "Partially update an article",
         "security": [
           {
-            "apiKeyAuth": []
-          },
-          {
             "sanctumAuth": []
           }
         ],
@@ -873,9 +832,6 @@
         "summary": "Delete an article (owner or admin)",
         "security": [
           {
-            "apiKeyAuth": []
-          },
-          {
             "sanctumAuth": []
           }
         ],
@@ -908,11 +864,7 @@
           "Comments"
         ],
         "summary": "List approved comments",
-        "security": [
-          {
-            "apiKeyAuth": []
-          }
-        ],
+        "security": [],
         "parameters": [
           {
             "name": "page",
@@ -955,9 +907,6 @@
         ],
         "summary": "Add a comment",
         "security": [
-          {
-            "apiKeyAuth": []
-          },
           {
             "sanctumAuth": []
           }
@@ -1003,6 +952,9 @@
           },
           "401": {
             "description": "Unauthenticated"
+          },
+          "403": {
+            "description": "Account disabled, or email not verified"
           },
           "422": {
             "description": "Validation failed",
@@ -1052,9 +1004,6 @@
         "summary": "Delete a comment (its author or an admin)",
         "security": [
           {
-            "apiKeyAuth": []
-          },
-          {
             "sanctumAuth": []
           }
         ],
@@ -1080,11 +1029,7 @@
           "Tags"
         ],
         "summary": "List categories with article counts",
-        "security": [
-          {
-            "apiKeyAuth": []
-          }
-        ],
+        "security": [],
         "responses": {
           "200": {
             "description": "Categories",
@@ -1117,9 +1062,6 @@
         "summary": "Materialise a category",
         "description": "Categories are managed by administrators in the admin area. This endpoint only creates a row for a category that already exists in the central list — it never invents one.",
         "security": [
-          {
-            "apiKeyAuth": []
-          },
           {
             "sanctumAuth": []
           }
@@ -1217,9 +1159,6 @@
         "summary": "List the user's notifications",
         "security": [
           {
-            "apiKeyAuth": []
-          },
-          {
             "sanctumAuth": []
           }
         ],
@@ -1292,9 +1231,6 @@
         "summary": "Unread count",
         "security": [
           {
-            "apiKeyAuth": []
-          },
-          {
             "sanctumAuth": []
           }
         ],
@@ -1345,9 +1281,6 @@
         "summary": "Mark one notification as read",
         "security": [
           {
-            "apiKeyAuth": []
-          },
-          {
             "sanctumAuth": []
           }
         ],
@@ -1383,9 +1316,6 @@
         "summary": "Mark one notification as read (alias)",
         "security": [
           {
-            "apiKeyAuth": []
-          },
-          {
             "sanctumAuth": []
           }
         ],
@@ -1420,9 +1350,6 @@
         "summary": "Mark every notification as read",
         "security": [
           {
-            "apiKeyAuth": []
-          },
-          {
             "sanctumAuth": []
           }
         ],
@@ -1438,9 +1365,6 @@
         ],
         "summary": "Mark every notification as read (alias)",
         "security": [
-          {
-            "apiKeyAuth": []
-          },
           {
             "sanctumAuth": []
           }

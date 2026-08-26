@@ -8,6 +8,7 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -23,6 +24,11 @@ class AuthController extends Controller
             'email' => $request->validated('email'),
             'password' => Hash::make($request->validated('password')),
         ]);
+
+        // Same verification mail the web sign-up sends. The token is still
+        // issued immediately — reading the API never required verification —
+        // but the write endpoints behind `verified` wait for the link.
+        event(new Registered($user));
 
         $token = $user->createToken('api')->plainTextToken;
 

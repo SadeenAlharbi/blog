@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\NotificationController as AdminNotificationContro
 use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -61,16 +62,44 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/comments', [DashboardController::class, 'comments'])->name('dashboard.comments');
 
-    // Must be registered before /posts/{post:slug} so "create" isn't matched as a slug.
-    Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
-    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
-    Route::get('/posts/{post:slug}/edit', [PostController::class, 'edit'])->name('posts.edit');
-    Route::put('/posts/{post:slug}', [PostController::class, 'update'])->name('posts.update');
-    Route::delete('/posts/{post:slug}', [PostController::class, 'destroy'])->name('posts.destroy');
-    // Publish your own draft without reopening the editor.
-    Route::post('/posts/{post:slug}/publish', [PostController::class, 'publishOwn'])->name('posts.publish');
+    /*
+    | Email verification (Laravel's own flow).
+    |
+    | These three sit OUTSIDE the `verified` group on purpose — an unverified
+    | user has to be able to reach the notice and ask for a new link.
+    */
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])
+        ->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+        ->middleware(['signed', 'throttle:6,1'])
+        ->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'send'])
+        ->middleware('throttle:6,1')
+        ->name('verification.send');
 
-    Route::post('/posts/{post:slug}/comments', [CommentController::class, 'store'])->name('comments.store');
+    /*
+    | Writing content requires a verified address.
+    |
+    | Deliberately NARROW: reading, the member dashboard, notifications, logout
+    | and deleting your own content all stay open to an unverified account, and
+    | the admin area is not gated at all (an administrator is created by the
+    | platform owner, not by self-registration). Only the actions that put new
+    | public content on the site wait for the link to be opened.
+    */
+    Route::middleware('verified')->group(function () {
+        // Must be registered before /posts/{post:slug} so "create" isn't matched as a slug.
+        Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
+        Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+        Route::get('/posts/{post:slug}/edit', [PostController::class, 'edit'])->name('posts.edit');
+        Route::put('/posts/{post:slug}', [PostController::class, 'update'])->name('posts.update');
+        // Publish your own draft without reopening the editor.
+        Route::post('/posts/{post:slug}/publish', [PostController::class, 'publishOwn'])->name('posts.publish');
+
+        Route::post('/posts/{post:slug}/comments', [CommentController::class, 'store'])->name('comments.store');
+    });
+
+    // Removing your own content is never blocked by verification.
+    Route::delete('/posts/{post:slug}', [PostController::class, 'destroy'])->name('posts.destroy');
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy'])->name('comments.destroy');
 
     // In-site notifications (bell). Database notifications on the current user.
@@ -125,6 +154,9 @@ Route::middleware(['auth', 'admin'])
 
         // Comments moderation.
         Route::get('/comments', [AdminCommentController::class, 'index'])->name('comments.index');
+        // Bulk restore from the "removed comments" dialog. Declared before the
+        // {comment} wildcard routes so "restore" is never read as an id.
+        Route::post('/comments/restore', [AdminCommentController::class, 'restoreSelected'])->name('comments.restoreSelected');
         Route::post('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->name('comments.approve');
         Route::post('/comments/{comment}/hide', [AdminCommentController::class, 'hide'])->name('comments.hide');
         Route::post('/comments/{comment}/restore', [AdminCommentController::class, 'restore'])->name('comments.restore');

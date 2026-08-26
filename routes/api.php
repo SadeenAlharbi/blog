@@ -62,17 +62,24 @@ Route::prefix('v1')->middleware('apikey')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout'])->middleware('throttle:logout');
         Route::get('/user', [AuthController::class, 'user']);
 
+        /*
+        | `verified` mirrors the web app exactly: publishing an article or
+        | writing a comment needs a verified address, so a token cannot be used
+        | to walk around the rule the site enforces. Reading, deleting your own
+        | content and every auth endpoint are untouched. An unverified caller
+        | gets 403 {"message": "Your email address is not verified."}.
+        */
         Route::post('/posts', [PostController::class, 'store'])
-            ->middleware('throttle:posts');
+            ->middleware(['verified', 'throttle:posts']);
 
         Route::middleware('throttle:post-mutations')->group(function () {
-            Route::put('/posts/{post:slug}', [PostController::class, 'update']);
-            Route::patch('/posts/{post:slug}', [PostController::class, 'update']);
+            Route::put('/posts/{post:slug}', [PostController::class, 'update'])->middleware('verified');
+            Route::patch('/posts/{post:slug}', [PostController::class, 'update'])->middleware('verified');
             Route::delete('/posts/{post:slug}', [PostController::class, 'destroy']);
         });
 
         Route::post('/posts/{post:slug}/comments', [CommentController::class, 'store'])
-            ->middleware('throttle:comments');
+            ->middleware(['verified', 'throttle:comments']);
 
         // Parity with the web app: a comment's author (or an admin) may delete
         // it. Authorization is CommentPolicy, exactly as on the site.

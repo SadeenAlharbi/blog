@@ -58,7 +58,10 @@ it('registers a user through the web form and logs them in', function () {
         'password_confirmation' => 'password123',
     ]);
 
-    $response->assertRedirect(route('dashboard'));
+    // Signing up still signs the account in; it now lands on the "verify your
+    // email" notice instead of the dashboard, because publishing waits for the
+    // link. Reading and the dashboard stay open — see EmailVerificationTest.
+    $response->assertRedirect(route('verification.notice'));
     $this->assertAuthenticated();
-    $this->assertDatabaseHas('users', ['email' => 'newweb@example.com']);
+    $this->assertDatabaseHas('users', ['email' => 'newweb@example.com', 'email_verified_at' => null]);
 });

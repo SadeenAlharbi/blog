@@ -9,10 +9,12 @@ import json
 import pathlib
 
 BEARER = "sanctumAuth"
-APIKEY = "apiKeyAuth"
 
-both = [{APIKEY: []}, {BEARER: []}]
-public = [{APIKEY: []}]
+# Sanctum's bearer token is the ONLY credential this API asks for. `public`
+# is an empty list, which is how OpenAPI says "no authentication required" —
+# Swagger UI then leaves those endpoints callable without pressing Authorize.
+both = [{BEARER: []}]
+public = []
 
 
 def resp(code, desc, schema=None):
@@ -60,12 +62,18 @@ spec = {
         "version": "1.0.0",
         "description": (
             "REST API for منصة المعرفة السعودية.\n\n"
-            "**Two independent layers guard this API:**\n\n"
-            "1. `X-API-KEY` — identifies the *client application*. Configure `API_KEY` in `.env`; "
-            "while it is unset the check steps aside so an existing installation keeps working.\n"
-            "2. `Authorization: Bearer <token>` — identifies the *user* (Laravel Sanctum).\n\n"
-            "Authorization (who may edit what) is enforced by Policies, so the API and the web app "
-            "can never disagree. A disabled account receives `403` and its tokens are revoked."
+            "**Authentication — Laravel Sanctum bearer tokens.**\n\n"
+            "`POST /auth/register` and `POST /auth/login` return a personal access token. "
+            "Send it on every protected call as:\n\n"
+            "```\nAuthorization: Bearer <token>\n```\n\n"
+            "In Swagger UI press **Authorize**, paste the token, and the header is attached "
+            "to each request you try. `POST /auth/logout` deletes the token server-side, so the "
+            "same value stops working immediately.\n\n"
+            "Endpoints marked without a padlock are public and need no token.\n\n"
+            "**Authorization** (who may edit what) is enforced by Policies, so the API and the web "
+            "app can never disagree. Publishing an article or writing a comment additionally needs a "
+            "verified email address (`403` otherwise). A disabled account receives `403` and its "
+            "tokens are revoked."
         ),
     },
     "servers": [{"url": "/api/v1", "description": "API v1"}],
@@ -83,12 +91,6 @@ spec = {
                 "scheme": "bearer",
                 "bearerFormat": "Sanctum",
                 "description": "A Sanctum personal access token returned by login or register.",
-            },
-            APIKEY: {
-                "type": "apiKey",
-                "in": "header",
-                "name": "X-API-KEY",
-                "description": "Client application key. Never commit a real key; set API_KEY in .env.",
             },
         },
         "schemas": {
@@ -185,7 +187,7 @@ P["/auth/register"] = {
         "responses": {
             **resp(201, "Registered", envelope({"type": "object", "properties": {
                 "user": ref("User"), "token": {"type": "string"}}}, "Registered successfully.")),
-            **resp(401, "Missing or invalid X-API-KEY"),
+            **resp(401, "Unauthenticated — missing or invalid bearer token"),
             **resp(422, "Validation failed", validation_error),
             **resp(429, "Too many attempts"),
         },
@@ -212,7 +214,7 @@ P["/auth/login"] = {
         "responses": {
             **resp(200, "Logged in", envelope({"type": "object", "properties": {
                 "user": ref("User"), "token": {"type": "string"}}}, "Logged in successfully.")),
-            **resp(401, "Missing or invalid X-API-KEY"),
+            **resp(401, "Unauthenticated — missing or invalid bearer token"),
             **resp(403, "Account disabled by the platform administrators"),
             **resp(422, "Invalid credentials", validation_error),
             **resp(429, "Too many attempts"),
@@ -225,7 +227,7 @@ P["/auth/logout"] = {
         "tags": ["Auth"],
         "summary": "Revoke the current token",
         "security": both,
-        "responses": {**resp(200, "Logged out"), **resp(401, "Unauthenticated"), **resp(403, "Account disabled")},
+        "responses": {**resp(200, "Logged out"), **resp(401, "Unauthenticated"), **resp(403, "Account disabled, not the owner, or email not verified")},
     }
 }
 
@@ -237,7 +239,7 @@ P["/auth/me"] = {
         "responses": {
             **resp(200, "Current user", envelope(ref("User"))),
             **resp(401, "Unauthenticated"),
-            **resp(403, "Account disabled"),
+            **resp(403, "Account disabled, not the owner, or email not verified"),
         },
     }
 }
@@ -256,7 +258,7 @@ P["/posts"] = {
             {"name": "per_page", "in": "query", "schema": {"type": "integer", "default": 10}},
             {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
         ],
-        "responses": {**resp(200, "Paginated articles", paginated), **resp(401, "Missing or invalid X-API-KEY")},
+        "responses": {**resp(200, "Paginated articles", paginated), **resp(401, "Unauthenticated — missing or invalid bearer token")},
     },
     "post": {
         "tags": ["Posts"],
@@ -281,7 +283,7 @@ P["/posts"] = {
         },
         "responses": {
             **resp(201, "Created", envelope(ref("Post"), "Post created successfully.")),
-            **resp(401, "Unauthenticated"), **resp(403, "Account disabled"),
+            **resp(401, "Unauthenticated"), **resp(403, "Account disabled, not the owner, or email not verified"),
             **resp(422, "Validation failed", validation_error), **resp(429, "Rate limited"),
         },
     },
@@ -335,7 +337,9 @@ P["/posts/{slug}/comments"] = {
             "properties": {"content": {"type": "string", "maxLength": 2000}},
         }}}},
         "responses": {**resp(201, "Created", envelope(ref("Comment"), "Comment added successfully.")),
-                      **resp(401, "Unauthenticated"), **resp(422, "Validation failed", validation_error),
+                      **resp(401, "Unauthenticated"),
+                      **resp(403, "Account disabled, or email not verified"),
+                      **resp(422, "Validation failed", validation_error),
                       **resp(429, "Rate limited")},
     },
 }
