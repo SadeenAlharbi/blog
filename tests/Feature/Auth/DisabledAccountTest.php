@@ -27,8 +27,10 @@ it('blocks a disabled account at the web login with a clear message', function (
 it('still lets an active account log in', function () {
     $user = User::factory()->create(['password' => bcrypt('secret-pass')]);
 
+    // An ordinary member lands on the site itself after signing in; the
+    // destination rules live in LoginRedirectTest.
     $this->post('/login', ['email' => $user->email, 'password' => 'secret-pass'])
-        ->assertRedirect(route('dashboard'));
+        ->assertRedirect(route('home'));
 
     $this->assertAuthenticatedAs($user);
 });

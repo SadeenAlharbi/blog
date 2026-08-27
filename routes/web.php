@@ -157,6 +157,9 @@ Route::middleware(['auth', 'admin'])
         // Bulk restore from the "removed comments" dialog. Declared before the
         // {comment} wildcard routes so "restore" is never read as an id.
         Route::post('/comments/restore', [AdminCommentController::class, 'restoreSelected'])->name('comments.restoreSelected');
+        // Permanent erase from the same dialog. Separate route from the restore
+        // above so the two intents can never be confused for one another.
+        Route::post('/comments/force-delete', [AdminCommentController::class, 'forceDeleteSelected'])->name('comments.forceDeleteSelected');
         Route::post('/comments/{comment}/approve', [AdminCommentController::class, 'approve'])->name('comments.approve');
         Route::post('/comments/{comment}/hide', [AdminCommentController::class, 'hide'])->name('comments.hide');
         Route::post('/comments/{comment}/restore', [AdminCommentController::class, 'restore'])->name('comments.restore');

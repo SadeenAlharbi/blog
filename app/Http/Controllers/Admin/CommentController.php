@@ -146,6 +146,50 @@ class CommentController extends Controller
         return back()->with('success', "تم استرداد {$restored} تعليقاً.");
     }
 
+    /**
+     * Erase the removed comments the moderator ticked — permanently.
+     *
+     * This is the counterpart to restoreSelected, not a replacement for it:
+     * `delete()` elsewhere still soft-deletes, and this endpoint is the ONLY
+     * way a row leaves the database.
+     *
+     * Three guards, all server-side:
+     *   • admin only — the route's middleware plus CommentPolicy::moderate;
+     *   • `onlyTrashed()` — a live comment can never be erased through here,
+     *     even if its id is posted by hand;
+     *   • an empty selection is refused rather than read as "all".
+     */
+    public function forceDeleteSelected(Request $request)
+    {
+        $this->authorize('moderate', new Comment());
+
+        $validated = $request->validate([
+            'ids' => ['nullable', 'array'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $ids = array_unique($validated['ids'] ?? []);
+
+        if ($ids === []) {
+            return back()->with('error', 'يرجى تحديد تعليق واحد على الأقل.');
+        }
+
+        /*
+         * onlyTrashed() is the safety boundary. An id belonging to a comment
+         * that is still live simply does not match, so it is skipped — the
+         * request is not trusted to decide what may be erased.
+         */
+        $deleted = Comment::onlyTrashed()->whereIn('id', $ids)->forceDelete();
+
+        if ($deleted === 0) {
+            return back()->with('error', 'لم يتم حذف أي تعليق. يمكن الحذف النهائي للتعليقات المحذوفة فقط.');
+        }
+
+        return back()->with('success', $deleted === 1
+            ? 'تم حذف التعليق نهائياً.'
+            : "تم حذف {$deleted} تعليقات نهائياً.");
+    }
+
     /** Restore a single soft-deleted comment (row-level button). */
     public function restore(int $comment)
     {

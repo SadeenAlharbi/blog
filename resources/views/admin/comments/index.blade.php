@@ -234,15 +234,47 @@
 
                         <p data-restore-error class="hidden text-xs text-red-600 mb-2">يرجى تحديد تعليق واحد على الأقل.</p>
 
-                        <div class="flex items-center gap-2">
+                        {{-- Normal state: restore, erase, or close. --}}
+                        <div class="flex items-center gap-2" data-actions>
                             <button type="submit"
                                     class="h-11 flex-1 rounded-xl bg-brand-600 text-white text-sm font-semibold hover:bg-brand-700 transition-colors">
                                 استرداد المحدد
+                            </button>
+                            {{-- type="button": erasing goes through the confirmation
+                                 step below, never straight to the server. --}}
+                            <button type="button" data-force-delete
+                                    class="h-11 rounded-xl border border-red-200 bg-white px-4 text-sm font-semibold text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors">
+                                حذف نهائي للمحدد
                             </button>
                             <button type="button" data-modal-close
                                     class="h-11 rounded-xl border border-ink-200 bg-white px-5 text-sm font-medium text-ink-600 hover:border-ink-300 transition-colors">
                                 إلغاء
                             </button>
+                        </div>
+
+                        {{-- Confirmation state. Replaces the row above in place, so
+                             the ticked comments stay visible behind the question and
+                             no second dialog is opened over this one. --}}
+                        <div class="hidden" data-force-confirm>
+                            <div class="rounded-xl border border-red-200 bg-red-50 p-4 mb-3">
+                                <p class="text-sm font-semibold text-red-700 mb-1">
+                                    هل أنت متأكد من حذف <span data-force-count>0</span> تعليقاً نهائياً؟
+                                </p>
+                                <p class="text-xs text-red-600 leading-relaxed">
+                                    هذا الإجراء نهائي ولا يمكن التراجع عنه أو استرداد التعليقات بعد حذفها.
+                                </p>
+                            </div>
+
+                            <div class="flex items-center gap-2">
+                                <button type="button" data-force-confirm-ok
+                                        class="h-11 flex-1 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors">
+                                    حذف نهائي
+                                </button>
+                                <button type="button" data-force-cancel
+                                        class="h-11 rounded-xl border border-ink-200 bg-white px-5 text-sm font-medium text-ink-600 hover:border-ink-300 transition-colors">
+                                    إلغاء
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -308,6 +340,9 @@
                     countLabel.textContent = shown + ' من ' + rows.length;
                     selectAll.checked = false;
                     errorNote.classList.add('hidden');
+                    // Changing the filter clears the selection, so a pending
+                    // "delete N permanently?" question no longer means anything.
+                    cancelConfirm();
                 }
 
                 userFilter.addEventListener('change', applyFilters);
@@ -318,18 +353,72 @@
                         row.querySelector('input[type="checkbox"]').checked = selectAll.checked;
                     });
                     errorNote.classList.add('hidden');
+                    cancelConfirm();
                 });
+
+                function chosen() {
+                    return form.querySelectorAll('input[name="ids[]"]:checked').length;
+                }
 
                 // Client-side courtesy only — the server refuses an empty
                 // selection too, so this can never be the only guard.
                 form.addEventListener('submit', function (e) {
-                    if (form.querySelectorAll('input[name="ids[]"]:checked').length === 0) {
+                    if (chosen() === 0) {
                         e.preventDefault();
                         errorNote.classList.remove('hidden');
                     }
                 });
 
+                /* ---------------- permanent delete ---------------- */
+
+                var actionsRow = form.querySelector('[data-actions]');
+                var confirmBox = form.querySelector('[data-force-confirm]');
+                var forceBtn = form.querySelector('[data-force-delete]');
+                var forceCount = form.querySelector('[data-force-count]');
+                var restoreUrl = form.getAttribute('action');
+                var forceUrl = @json(route('admin.comments.forceDeleteSelected'));
+
+                function cancelConfirm() {
+                    if (!confirmBox) return;
+                    confirmBox.classList.add('hidden');
+                    actionsRow.classList.remove('hidden');
+                }
+
+                // Asking first. Nothing is sent until the red button below is
+                // pressed, and an empty selection never gets that far.
+                forceBtn.addEventListener('click', function () {
+                    if (chosen() === 0) {
+                        errorNote.classList.remove('hidden');
+                        return;
+                    }
+                    errorNote.classList.add('hidden');
+                    forceCount.textContent = chosen();
+                    actionsRow.classList.add('hidden');
+                    confirmBox.classList.remove('hidden');
+                });
+
+                form.querySelector('[data-force-cancel]').addEventListener('click', cancelConfirm);
+
+                form.querySelector('[data-force-confirm-ok]').addEventListener('click', function () {
+                    if (chosen() === 0) {   // re-checked at the last moment
+                        cancelConfirm();
+                        errorNote.classList.remove('hidden');
+                        return;
+                    }
+                    // Point the same form (and therefore the same ticked boxes)
+                    // at the erase route for this one submission.
+                    form.setAttribute('action', forceUrl);
+                    form.submit();
+                    form.setAttribute('action', restoreUrl);
+                });
+
+                // Ticking or unticking a row invalidates a pending question.
+                rows.forEach(function (row) {
+                    row.querySelector('input[type="checkbox"]').addEventListener('change', cancelConfirm);
+                });
+
                 applyFilters();
+                cancelConfirm();
             })();
         </script>
     @endif
