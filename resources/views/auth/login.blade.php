@@ -43,6 +43,8 @@
         </button>
     </form>
 
+    <x-google-button />
+
     <p class="text-center text-sm text-ink-500 mt-6">
         ليس لديك حساب؟
         <a href="{{ route('register') }}" class="text-brand-600 font-medium hover:text-brand-700">إنشاء حساب جديد</a>

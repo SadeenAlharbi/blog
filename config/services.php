@@ -52,4 +52,27 @@ return [
         'key' => env('API_KEY'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Google sign-in (Laravel Socialite)
+    |--------------------------------------------------------------------------
+    |
+    | Credentials come from Google Cloud Console and live only in .env — never
+    | in the repository. Read through config (not env() at call time) so
+    | `php artisan config:cache` keeps working.
+    |
+    | GOOGLE_REDIRECT_URI must match the "Authorized redirect URI" registered in
+    | Google Cloud exactly, character for character. It falls back to this app's
+    | own callback route, so a normal install only needs the id and the secret.
+    |
+    | While either is empty the button stays hidden and the routes answer with a
+    | clear message instead of an exception.
+    |
+    */
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI', rtrim((string) env('APP_URL', 'http://localhost'), '/').'/auth/google/callback'),
+    ],
+
 ];

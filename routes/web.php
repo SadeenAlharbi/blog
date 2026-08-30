@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -48,6 +49,18 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('/register', [RegisteredUserController::class, 'store']);
+
+    /*
+    | "Continue with Google" — one flow, started from either the sign-in or the
+    | sign-up page. Both sit in the `guest` group with the rest of the entry
+    | points: neither may be behind `auth`, because nobody is signed in until
+    | the callback finishes. They stay inside `web` so the session (and with it
+    | Socialite's state check against CSRF) is available.
+    */
+    Route::get('/auth/google/redirect', [GoogleAuthController::class, 'redirect'])
+        ->middleware('throttle:10,1')->name('auth.google.redirect');
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback'])
+        ->middleware('throttle:10,1')->name('auth.google.callback');
 
     // Password reset (uses Laravel's Password broker + the existing password_reset_tokens table).
     Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');

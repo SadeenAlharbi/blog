@@ -50,6 +50,8 @@
         </button>
     </form>
 
+    <x-google-button label="إنشاء حساب باستخدام Google" />
+
     <p class="text-center text-sm text-ink-500 mt-6">
         لديك حساب بالفعل؟
         <a href="{{ route('login') }}" class="text-brand-600 font-medium hover:text-brand-700">تسجيل الدخول</a>

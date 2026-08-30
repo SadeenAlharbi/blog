@@ -32,6 +32,9 @@ class User extends Authenticatable implements MustVerifyEmail
     public const ROLE_ADMIN = 'admin';
     public const ROLE_USER = 'user';
 
+    /** External sign-in providers, stored in the `provider` column. */
+    public const PROVIDER_GOOGLE = 'google';
+
     public function posts()
     {
         return $this->hasMany(Post::class);
@@ -54,6 +57,12 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
+    }
+
+    /** Is this account linked to an external sign-in provider (Google)? */
+    public function usesProvider(string $provider = self::PROVIDER_GOOGLE): bool
+    {
+        return $this->provider === $provider && filled($this->provider_id);
     }
 
     /**
