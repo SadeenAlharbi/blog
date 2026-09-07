@@ -14,9 +14,6 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database with development content.
-     */
     public function run(): void
     {
         $testUser = User::factory()->create([
@@ -26,7 +23,6 @@ class DatabaseSeeder extends Seeder
 
         $authors = User::factory(9)->create()->push($testUser);
 
-        // Categories come from the central list, not random words.
         $tags = collect(Tag::categories())->map(
             fn ($name, $slug) => Tag::firstOrCreate(['slug' => $slug], ['name' => $name])
         )->values();
@@ -43,8 +39,7 @@ class DatabaseSeeder extends Seeder
                     ->recycle($authors)
                     ->create(['post_id' => $post->id]);
 
-                // A handful of realistic reads so the dashboard charts have
-                // something to draw during development.
+                
                 foreach (range(1, random_int(0, 40)) as $i) {
                     PostView::create([
                         'post_id' => $post->id,
@@ -57,11 +52,10 @@ class DatabaseSeeder extends Seeder
                 }
             });
 
-        // A few drafts and scheduled posts so the workflow is visible.
         Post::factory(4)->draft()->recycle($authors)->create();
         Post::factory(3)->scheduled()->recycle($authors)->create();
 
-        // Promotes / creates the administrator from .env (ADMIN_EMAIL, ADMIN_PASSWORD).
+
         $this->call(AdminUserSeeder::class);
     }
 }
