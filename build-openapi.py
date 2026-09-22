@@ -248,13 +248,26 @@ P["/auth/me"] = {
 P["/posts"] = {
     "get": {
         "tags": ["Posts"],
-        "summary": "List published articles",
+        "summary": "List articles",
+        "description": (
+            "Published articles only, unless an **administrator** narrows the listing "
+            "with `status`. The parameter is ignored for guests and non-admins, and an "
+            "unrecognised value falls back to published — the listing can never be "
+            "widened by asking. This mirrors `GET /posts/{slug}`, which already lets an "
+            "admin read an unpublished article.\n\n"
+            "The admin may authenticate with either a bearer token or a session."
+        ),
         "security": public,
         "parameters": [
             {"name": "search", "in": "query", "schema": {"type": "string"},
              "description": "Matches title, content or category name"},
             {"name": "tag", "in": "query", "schema": {"type": "string"}, "description": "Category slug or name"},
-            {"name": "sort", "in": "query", "schema": {"type": "string", "enum": ["latest", "oldest", "title", "views"]}},
+            {"name": "status", "in": "query",
+             "schema": {"type": "string", "enum": ["published", "draft", "scheduled", "all"]},
+             "description": "Admins only. Omit for the public default (published). "
+                            "`all` returns every status."},
+            {"name": "sort", "in": "query", "schema": {"type": "string", "enum": ["latest", "oldest", "title", "views"]},
+             "description": "Ordering. Unpublished listings order by created_at, since a draft has no published_at."},
             {"name": "per_page", "in": "query", "schema": {"type": "integer", "default": 10}},
             {"name": "page", "in": "query", "schema": {"type": "integer", "default": 1}},
         ],
