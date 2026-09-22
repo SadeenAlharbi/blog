@@ -23,6 +23,7 @@ authorization, testing, and a Blade + React frontend — not a typical blog scaf
 - [API Reference](#api-reference)
 - [Frontend](#frontend)
 - [Running Locally](#running-locally)
+- [Running with Docker](#running-with-docker)
 - [License](#license)
 
 ## Features
@@ -320,6 +321,54 @@ php artisan queue:work
 ```
 
 Visit `http://localhost:8000`.
+
+## Running with Docker
+
+A containerized setup is also available, so the project runs without installing PHP, Composer, or a
+local MySQL server.
+
+**Requirements:** Docker Desktop only.
+
+```bash
+git clone <repo-url>
+cd mywebsite
+
+cp .env.example .env
+# set DB_PASSWORD and DB_ROOT_PASSWORD in .env
+
+docker compose up -d --build
+```
+
+This builds the app container, starts MySQL (utf8mb4 by default), runs `composer install`, applies
+migrations, and starts the server on port 8000.
+
+Seed the primary admin account (required to sign in as an administrator):
+
+```bash
+docker compose exec app php artisan db:seed --class=AdminUserSeeder
+```
+
+Link storage for uploaded images:
+
+```bash
+docker compose exec app php artisan storage:link
+```
+
+Visit `http://localhost:8000`.
+
+### Restoring an existing database
+
+To load real content instead of an empty database, import a SQL dump into the running MySQL container:
+
+```bash
+docker exec -i mywebsite-db mysql -u root -p"$DB_ROOT_PASSWORD" saudi_blog < saudi_blog.sql
+```
+
+If uploaded images are provided separately (`uploads.tar.gz`), extract them before running `storage:link`:
+
+```bash
+tar -xzf uploads.tar.gz -C storage/app
+```
 
 ## License
 
